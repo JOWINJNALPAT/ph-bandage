@@ -45,7 +45,8 @@ function NurseDashboard() {
     setMessage({ text: '', type: '' });
     try {
       const formData = new FormData();
-      formData.append('bandageId', bandageId);
+      formData.append('bandageId', bandageId.trim());
+
       if (image) {
         formData.append('image', image);
       } else if (selectedColor) {
@@ -122,7 +123,8 @@ function NurseDashboard() {
                     className="form-input"
                     type="text"
                     value={bandageId}
-                    onChange={e => setBandageId(e.target.value)}
+                    onChange={e => setBandageId(e.target.value.trimStart().toUpperCase())}
+
                     required
                     placeholder="e.g. BANDAGE-001"
                   />

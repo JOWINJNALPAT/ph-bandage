@@ -9,9 +9,11 @@ const { rgbToColor, colorToPhValue, getInfectionLevel } = require('../utils/colo
  */
 const submitScan = async (req, res) => {
   try {
-    const { bandageId, color } = req.body;
+    const { bandageId: rawBandageId, color } = req.body;
+    const bandageId = (rawBandageId || '').trim();
     const nurseId = req.user.id;
     const imageBuffer = req.file?.buffer; // memoryStorage gives us buffer directly
+
 
     // Validate input
     if (!bandageId) {
