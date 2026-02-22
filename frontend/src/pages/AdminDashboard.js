@@ -1,12 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { adminAPI, authAPI } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from '../components/Sidebar';
 
 function AdminDashboard() {
-  const { logout } = useAuth();
-  const navigate = useNavigate();
+  const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('analytics');
   const [users, setUsers] = useState([]);
   const [analytics, setAnalytics] = useState(null);

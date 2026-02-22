@@ -35,9 +35,9 @@ function LoginPage() {
         {/* Logo + Branding */}
         <div style={{ textAlign: 'center', marginBottom: 32 }}>
           <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 16 }}>
-            <Logo size={64} />
+            <Logo size={72} />
           </div>
-          <h1 style={{ fontSize: 26, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 6 }}>
+          <h1 style={{ fontSize: 28, fontWeight: 800, color: 'var(--text-primary)', marginBottom: 4, letterSpacing: '-0.5px' }}>
             pH Bandage
           </h1>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', fontWeight: 500 }}>
@@ -45,10 +45,11 @@ function LoginPage() {
           </p>
           <div style={{
             display: 'inline-flex', alignItems: 'center', gap: 6,
-            marginTop: 10, padding: '4px 12px',
+            marginTop: 10, padding: '4px 14px',
             background: 'rgba(79,142,247,0.1)',
             border: '1px solid rgba(79,142,247,0.2)',
-            borderRadius: 20, fontSize: 11, color: 'var(--accent-blue)', fontWeight: 600
+            borderRadius: 20, fontSize: 11, color: 'var(--accent-blue)', fontWeight: 600,
+            letterSpacing: '0.3px'
           }}>
             🏥 Hospital Staff Portal
           </div>

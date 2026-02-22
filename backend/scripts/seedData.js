@@ -1,151 +1,160 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
+const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Patient = require('../models/Patient');
 const Bandage = require('../models/Bandage');
 const Scan = require('../models/Scan');
 
-const seedDatabase = async () => {
-  try {
-    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/ph-bandage');
-    console.log('📦 Connected to MongoDB');
+const MONGO_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/ph-bandage';
 
-    // Clear existing data
-    await User.deleteMany({});
-    await Patient.deleteMany({});
-    await Bandage.deleteMany({});
-    await Scan.deleteMany({});
-    console.log('🗑️  Cleared existing data');
+async function seed() {
+  await mongoose.connect(MONGO_URI);
+  console.log('📦 Connected to MongoDB');
 
-    // Create users
-    const adminUser = await User.create({
-      name: 'Admin User',
-      email: 'admin@hospital.com',
-      password: 'password123',
-      role: 'admin',
-      department: 'Administration',
-    });
+  // Clear existing data
+  await Scan.deleteMany({});
+  await Bandage.deleteMany({});
+  await Patient.deleteMany({});
+  await User.deleteMany({});
+  console.log('🗑️  Cleared existing data');
 
-    const doctorUser = await User.create({
-      name: 'Dr. Sarah Johnson',
-      email: 'sarah@hospital.com',
-      password: 'password123',
+  const salt = await bcrypt.genSalt(10);
+  const hash = (pw) => bcrypt.hash(pw, salt);
+
+  // ── 1 Admin ──────────────────────────────────────────────
+  const admin = await User.create({
+    name: 'Dr. Admin Raj',
+    email: 'admin@hospital.com',
+    password: await hash('password123'),
+    role: 'admin',
+    department: 'Administration',
+  });
+
+  // ── 5 Doctors ────────────────────────────────────────────
+  const doctorData = [
+    { name: 'Dr. Sarah Johnson', email: 'sarah@hospital.com', department: 'Wound Care' },
+    { name: 'Dr. Michael Chen', email: 'michael@hospital.com', department: 'Surgery' },
+    { name: 'Dr. Priya Nair', email: 'priya@hospital.com', department: 'Dermatology' },
+    { name: 'Dr. James Williams', email: 'james@hospital.com', department: 'Orthopaedics' },
+    { name: 'Dr. Ananya Sharma', email: 'ananya@hospital.com', department: 'General Medicine' },
+  ];
+
+  const doctors = await User.insertMany(
+    await Promise.all(doctorData.map(async (d) => ({
+      ...d,
+      password: await hash('password123'),
       role: 'doctor',
-      department: 'Wound Care Unit',
-    });
+    })))
+  );
 
-    const nurseUser = await User.create({
-      name: 'Nurse Emily Brown',
-      email: 'emily@hospital.com',
-      password: 'password123',
+  // ── 5 Nurses ─────────────────────────────────────────────
+  const nurseData = [
+    { name: 'Emily Davis', email: 'emily@hospital.com', department: 'Wound Care' },
+    { name: 'Rose Thomas', email: 'rose@hospital.com', department: 'Surgery' },
+    { name: 'Kavya Menon', email: 'kavya@hospital.com', department: 'Dermatology' },
+    { name: 'Linda George', email: 'linda@hospital.com', department: 'Orthopaedics' },
+    { name: 'Sunita Patel', email: 'sunita@hospital.com', department: 'General Medicine' },
+  ];
+
+  const nurses = await User.insertMany(
+    await Promise.all(nurseData.map(async (n) => ({
+      ...n,
+      password: await hash('password123'),
       role: 'nurse',
-      department: 'Wound Care Unit',
+    })))
+  );
+
+  console.log('👤 Created 1 admin, 5 doctors, 5 nurses');
+
+  // ── 10 Patients (2 per doctor) ───────────────────────────
+  const patientRecords = [
+    { name: 'John Doe', age: 45, gender: 'Male', ward: 'Ward A', diagnosis: 'Post-surgical wound', doctorIndex: 0 },
+    { name: 'Jane Smith', age: 62, gender: 'Female', ward: 'Ward B', diagnosis: 'Diabetic foot ulcer', doctorIndex: 0 },
+    { name: 'Robert Brown', age: 38, gender: 'Male', ward: 'Ward C', diagnosis: 'Burn wound', doctorIndex: 1 },
+    { name: 'Mary Wilson', age: 55, gender: 'Female', ward: 'Ward A', diagnosis: 'Pressure sore', doctorIndex: 1 },
+    { name: 'Carlos Mendez', age: 29, gender: 'Male', ward: 'Ward D', diagnosis: 'Laceration wound', doctorIndex: 2 },
+    { name: 'Aisha Patel', age: 71, gender: 'Female', ward: 'Ward B', diagnosis: 'Venous leg ulcer', doctorIndex: 2 },
+    { name: 'David Okafor', age: 50, gender: 'Male', ward: 'Ward C', diagnosis: 'Infected wound', doctorIndex: 3 },
+    { name: 'Meera Krishnan', age: 44, gender: 'Female', ward: 'Ward A', diagnosis: 'Post-op wound', doctorIndex: 3 },
+    { name: 'Samuel Lee', age: 67, gender: 'Male', ward: 'Ward D', diagnosis: 'Chronic ulcer', doctorIndex: 4 },
+    { name: 'Fatima Al-Hassan', age: 33, gender: 'Female', ward: 'Ward B', diagnosis: 'Traumatic wound', doctorIndex: 4 },
+  ];
+
+  const patients = await Patient.insertMany(
+    patientRecords.map((p) => ({
+      name: p.name,
+      age: p.age,
+      gender: p.gender,
+      ward: p.ward,
+      diagnosis: p.diagnosis,
+      doctorId: doctors[p.doctorIndex]._id,
+    }))
+  );
+
+  console.log('🏥 Created 10 patients (2 per doctor)');
+
+  // ── Bandages (1 per patient) ─────────────────────────────
+  const bandages = await Bandage.insertMany(
+    patients.map((p, i) => ({
+      bandageId: `BANDAGE-${String(i + 1).padStart(3, '0')}`,
+      patientId: p._id,
+      type: 'pH Sensitive Strip',
+      appliedDate: new Date(),
+      active: true,
+    }))
+  );
+
+  console.log('🩹 Created 10 bandages');
+
+  // ── Sample Scans (1–2 per bandage) ───────────────────────
+  const colors = ['Yellow', 'Green', 'Blue', 'Dark Blue'];
+  const phMap = { Yellow: 5.8, Green: 6.8, Blue: 7.8, 'Dark Blue': 8.8 };
+  const lvlMap = { Yellow: 'Healthy', Green: 'Mild Risk', Blue: 'Medium Infection', 'Dark Blue': 'High Infection' };
+
+  const scans = [];
+  for (let i = 0; i < bandages.length; i++) {
+    const color = colors[i % colors.length];
+    scans.push({
+      bandageId: bandages[i]._id,
+      patientId: patients[i]._id,
+      nurseId: nurses[i % nurses.length]._id,
+      colorDetected: color,
+      rgbValue: { r: 100, g: 120, b: 140 },
+      phValue: phMap[color],
+      infectionLevel: lvlMap[color],
+      timestamp: new Date(Date.now() - i * 3600000),
     });
-
-    console.log('👤 Created users');
-
-    // Create patients
-    const patient1 = await Patient.create({
-      name: 'John Doe',
-      age: 65,
-      gender: 'Male',
-      patientId: 'PAT-001',
-      assignedDoctor: doctorUser._id,
-      medicalHistory: 'Diabetes Type 2, Hypertension',
-      woundStatus: 'Active',
-    });
-
-    const patient2 = await Patient.create({
-      name: 'Jane Smith',
-      age: 45,
-      gender: 'Female',
-      patientId: 'PAT-002',
-      assignedDoctor: doctorUser._id,
-      medicalHistory: 'No major medical history',
-      woundStatus: 'Active',
-    });
-
-    console.log('🏥 Created patients');
-
-    // Create bandages
-    const bandage1 = await Bandage.create({
-      bandageId: 'BANDAGE-001',
-      patientId: patient1._id,
-      woundLocation: 'Right leg, above knee',
-      initialNotes: 'Post-surgical wound',
-      isActive: true,
-    });
-
-    const bandage2 = await Bandage.create({
-      bandageId: 'BANDAGE-002',
-      patientId: patient2._id,
-      woundLocation: 'Left forearm',
-      initialNotes: 'Laceration wound',
-      isActive: true,
-    });
-
-    console.log('🩹 Created bandages');
-
-    // Create scans
-    const scan1 = await Scan.create({
-      bandageId: bandage1._id,
-      patientId: patient1._id,
-      nurseId: nurseUser._id,
-      colorDetected: 'Yellow',
-      rgbValue: { r: 255, g: 200, b: 50 },
-      phValue: 6.0,
-      infectionLevel: 'Healthy',
-      timestamp: new Date(Date.now() - 2 * 24 * 60 * 60 * 1000),
-    });
-
-    const scan2 = await Scan.create({
-      bandageId: bandage1._id,
-      patientId: patient1._id,
-      nurseId: nurseUser._id,
-      colorDetected: 'Green',
-      rgbValue: { r: 100, g: 200, b: 100 },
-      phValue: 6.9,
-      infectionLevel: 'Mild Risk',
-      timestamp: new Date(Date.now() - 1 * 24 * 60 * 60 * 1000),
-    });
-
-    const scan3 = await Scan.create({
-      bandageId: bandage1._id,
-      patientId: patient1._id,
-      nurseId: nurseUser._id,
-      colorDetected: 'Blue',
-      rgbValue: { r: 100, g: 150, b: 220 },
-      phValue: 7.6,
-      infectionLevel: 'Medium Infection',
-      timestamp: new Date(),
-    });
-
-    const scan4 = await Scan.create({
-      bandageId: bandage2._id,
-      patientId: patient2._id,
-      nurseId: nurseUser._id,
-      colorDetected: 'Yellow',
-      rgbValue: { r: 255, g: 200, b: 50 },
-      phValue: 6.0,
-      infectionLevel: 'Healthy',
-      timestamp: new Date(),
-    });
-
-    console.log('📊 Created scans');
-
-    console.log('\n✅ Database seeded successfully!\n');
-    console.log('Test Accounts:');
-    console.log('-------------------------------------------');
-    console.log('Admin:  admin@hospital.com / password123');
-    console.log('Doctor: sarah@hospital.com / password123');
-    console.log('Nurse:  emily@hospital.com / password123');
-    console.log('-------------------------------------------\n');
-
-    process.exit(0);
-  } catch (error) {
-    console.error('❌ Seeding error:', error);
-    process.exit(1);
+    // Add a follow-up scan for first 5
+    if (i < 5) {
+      const c2 = colors[(i + 1) % colors.length];
+      scans.push({
+        bandageId: bandages[i]._id,
+        patientId: patients[i]._id,
+        nurseId: nurses[(i + 1) % nurses.length]._id,
+        colorDetected: c2,
+        rgbValue: { r: 110, g: 130, b: 150 },
+        phValue: phMap[c2],
+        infectionLevel: lvlMap[c2],
+        timestamp: new Date(Date.now() - i * 3600000 - 1800000),
+      });
+    }
   }
-};
+  await Scan.insertMany(scans);
+  console.log(`📊 Created ${scans.length} scans`);
 
-seedDatabase();
+  console.log('\n✅ Database seeded successfully!');
+  console.log('─────────────────────────────────');
+  console.log('Admin  : admin@hospital.com   / password123');
+  console.log('Doctors: sarah, michael, priya, james, ananya @hospital.com / password123');
+  console.log('Nurses : emily, rose, kavya, linda, sunita @hospital.com / password123');
+  console.log('─────────────────────────────────');
+
+  await mongoose.disconnect();
+  process.exit(0);
+}
+
+seed().catch((err) => {
+  console.error('❌ Seed failed:', err);
+  process.exit(1);
+});
