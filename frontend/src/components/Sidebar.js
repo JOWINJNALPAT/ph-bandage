@@ -1,35 +1,36 @@
 import React from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
+import Logo from './Logo';
 
 const roleConfig = {
     admin: {
         label: 'Administrator',
         color: '#a855f7',
         gradient: 'linear-gradient(135deg,#a855f7,#4f8ef7)',
-        icon: '⚙️',
+        initial: 'A',
         navItems: [
-            { id: 'analytics', label: 'Analytics', icon: '📊' },
-            { id: 'users', label: 'Team Members', icon: '👥' },
-            { id: 'create', label: 'Add Member', icon: '➕' },
+            { id: 'analytics', label: 'Analytics Overview', icon: '📊' },
+            { id: 'users', label: 'Staff Members', icon: '👥' },
+            { id: 'create', label: 'Add Staff Member', icon: '➕' },
         ],
     },
     doctor: {
         label: 'Physician',
         color: '#4f8ef7',
         gradient: 'linear-gradient(135deg,#4f8ef7,#22d3ee)',
-        icon: '👨‍⚕️',
+        initial: 'Dr',
         navItems: [
-            { id: 'patients', label: 'My Patients', icon: '🏥' },
+            { id: 'patients', label: 'Patient List', icon: '🏥' },
         ],
     },
     nurse: {
-        label: 'Nurse',
+        label: 'Nursing Staff',
         color: '#22d3ee',
         gradient: 'linear-gradient(135deg,#22d3ee,#10b981)',
-        icon: '👩‍⚕️',
+        initial: 'N',
         navItems: [
-            { id: 'scan', label: 'Submit Scan', icon: '📸' },
+            { id: 'scan', label: 'Submit Scan', icon: '🩺' },
             { id: 'history', label: 'Scan History', icon: '📋' },
         ],
     },
@@ -45,47 +46,43 @@ function Sidebar({ activeTab, onTabChange }) {
         navigate('/login');
     };
 
+    // Get initials from user name
+    const initials = user?.name
+        ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+        : config.initial;
+
     return (
         <div className="sidebar">
             {/* Logo */}
             <div className="sidebar-logo">
-                <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div style={{
-                        width: 40, height: 40,
-                        background: 'linear-gradient(135deg,#4f8ef7,#22d3ee)',
-                        borderRadius: 10,
-                        display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: 20,
-                    }}>🩹</div>
-                    <div>
-                        <div style={{ fontWeight: 800, fontSize: 16, color: 'var(--text-primary)' }}>pH Bandage</div>
-                        <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 500 }}>Medical Platform</div>
-                    </div>
-                </div>
+                <Logo size={38} showText={true} />
             </div>
 
             {/* User badge */}
-            <div style={{ padding: '12px 24px', marginBottom: 8 }}>
+            <div style={{ padding: '12px 20px', marginBottom: 8 }}>
                 <div style={{
-                    background: `${config.color}15`,
-                    border: `1px solid ${config.color}30`,
+                    background: `${config.color}12`,
+                    border: `1px solid ${config.color}25`,
                     borderRadius: 10,
                     padding: '10px 14px',
                     display: 'flex',
                     alignItems: 'center',
                     gap: 10,
                 }}>
+                    {/* Avatar with initials */}
                     <div style={{
                         width: 36, height: 36,
                         background: config.gradient,
                         borderRadius: 8,
                         display: 'flex', alignItems: 'center',
-                        justifyContent: 'center', fontSize: 16,
-                        flexShrink: 0
-                    }}>{config.icon}</div>
+                        justifyContent: 'center',
+                        fontSize: 12, fontWeight: 800,
+                        color: '#fff', flexShrink: 0,
+                        letterSpacing: '-0.5px'
+                    }}>{initials}</div>
                     <div style={{ overflow: 'hidden' }}>
                         <div style={{ fontWeight: 700, fontSize: 13, color: 'var(--text-primary)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                            {user?.name || 'User'}
+                            {user?.name || 'Staff Member'}
                         </div>
                         <div style={{ fontSize: 11, color: config.color, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
                             {config.label}
@@ -94,9 +91,9 @@ function Sidebar({ activeTab, onTabChange }) {
                 </div>
             </div>
 
-            {/* Nav section label */}
-            <div style={{ padding: '4px 24px 8px', fontSize: 11, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
-                Navigation
+            {/* Nav label */}
+            <div style={{ padding: '4px 20px 8px', fontSize: 10, fontWeight: 700, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                Menu
             </div>
 
             {/* Nav Items */}
@@ -115,11 +112,8 @@ function Sidebar({ activeTab, onTabChange }) {
                 ))}
             </nav>
 
-            {/* Bottom section */}
-            <div style={{ padding: '16px 24px', borderTop: '1px solid var(--border)' }}>
-                <div style={{ fontSize: 11, color: 'var(--text-muted)', marginBottom: 10, fontWeight: 500 }}>
-                    🟢 Connected · v2.0.0
-                </div>
+            {/* Sign Out */}
+            <div style={{ padding: '16px 20px', borderTop: '1px solid var(--border)' }}>
                 <button
                     id="sidebar-logout"
                     onClick={handleLogout}
@@ -128,6 +122,9 @@ function Sidebar({ activeTab, onTabChange }) {
                 >
                     Sign Out
                 </button>
+                <p style={{ fontSize: 10, color: 'var(--text-muted)', textAlign: 'center', marginTop: 10, lineHeight: 1.5 }}>
+                    © 2026 pH Bandage System
+                </p>
             </div>
         </div>
     );

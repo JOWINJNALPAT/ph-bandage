@@ -95,10 +95,10 @@ function NurseDashboard() {
         </header>
 
         {activeTab === 'scan' && (
-          <div className="fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 340px', gap: 24 }}>
+          <div className="fade-in">
 
             {/* Scan Form */}
-            <div className="glass-card" style={{ padding: 32 }}>
+            <div className="glass-card" style={{ padding: 32, maxWidth: 640 }}>
               <div style={{ marginBottom: 28 }}>
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
                   📸 Submit Bandage Scan
@@ -210,49 +210,13 @@ function NurseDashboard() {
                 </button>
               </form>
             </div>
-
-            {/* Right panel: Color Guide */}
-            <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-              <div className="glass-card" style={{ padding: 24 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 16, color: 'var(--text-primary)' }}>🎨 pH Color Guide</h3>
-                {COLORS.map(c => (
-                  <div key={c.id} style={{
-                    display: 'flex', alignItems: 'center', gap: 12,
-                    padding: '10px 12px', borderRadius: 10, marginBottom: 8,
-                    background: c.bg, border: `1px solid ${c.border}`
-                  }}>
-                    <div style={{ width: 22, height: 22, borderRadius: '50%', background: c.dot, flexShrink: 0 }} />
-                    <div>
-                      <div style={{ fontSize: 13, fontWeight: 700, color: c.text }}>{c.label}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>{c.status} · pH {c.ph}</div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-
-              <div className="glass-card" style={{ padding: 24 }}>
-                <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 14, color: 'var(--text-primary)' }}>📋 Workflow Steps</h3>
-                {['Enter the Bandage ID', 'Upload photo or pick color', 'Submit the scan', 'Doctor reviews results'].map((step, i) => (
-                  <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 12 }}>
-                    <div style={{
-                      width: 26, height: 26, borderRadius: '50%',
-                      background: 'linear-gradient(135deg,#4f8ef7,#22d3ee)',
-                      display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontWeight: 800, color: '#fff', flexShrink: 0
-                    }}>{i + 1}</div>
-                    <span style={{ fontSize: 13, color: 'var(--text-secondary)' }}>{step}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
           </div>
         )}
-
         {activeTab === 'history' && (
           <div className="fade-in">
             <div className="section-header">
               <div>
-                <h2 className="section-title">📋 Scan History (Session)</h2>
+                <h2 className="section-title">Scan History (Session)</h2>
                 <p className="section-subtitle">{scanHistory.length} scans submitted this session</p>
               </div>
             </div>
@@ -270,9 +234,7 @@ function NurseDashboard() {
                     <div key={i} className="glass-card" style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 20 }}>
                       <div style={{ width: 48, height: 48, borderRadius: '50%', background: color.dot, flexShrink: 0, boxShadow: `0 0 20px ${color.dot}50` }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 2 }}>
-                          Bandage Scan
-                        </div>
+                        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 2 }}>Bandage Scan</div>
                         <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
                           Color: {scan.colorDetected} · pH: {typeof scan.phValue === 'number' ? scan.phValue.toFixed(2) : scan.phValue}
                         </div>

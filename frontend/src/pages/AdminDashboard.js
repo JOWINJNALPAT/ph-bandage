@@ -53,7 +53,6 @@ function AdminDashboard() {
     }
   };
 
-  const handleLogout = () => { logout(); navigate('/login'); };
 
   return (
     <div className="flex min-h-screen">
@@ -61,10 +60,9 @@ function AdminDashboard() {
       <main className="dashboard-layout">
         <header className="topbar">
           <div>
-            <h1 className="topbar-title">Admin Dashboard</h1>
-            <p className="topbar-subtitle">Manage users, view analytics, and configure the system.</p>
+            <h1 className="topbar-title">Administration</h1>
+            <p className="topbar-subtitle">Manage staff, view system analytics, and configure the platform.</p>
           </div>
-          <button onClick={handleLogout} className="btn-danger">Logout</button>
         </header>
         {error && <div className="alert alert-error">⚠ {error}</div>}
         {/* Tabs */}
