@@ -1,7 +1,7 @@
 const Scan = require('../models/Scan');
 const Bandage = require('../models/Bandage');
 const Patient = require('../models/Patient');
-const { extractAverageColor } = require('../utils/imageProcessor');
+const { extractAverageColorFromBuffer } = require('../utils/imageProcessor');
 const { rgbToColor, colorToPhValue, getInfectionLevel } = require('../utils/colorAnalysis');
 
 /**
@@ -11,7 +11,7 @@ const submitScan = async (req, res) => {
   try {
     const { bandageId, color } = req.body;
     const nurseId = req.user.id;
-    const imagePath = req.file?.path;
+    const imageBuffer = req.file?.buffer; // memoryStorage gives us buffer directly
 
     // Validate input
     if (!bandageId) {
@@ -34,14 +34,13 @@ const submitScan = async (req, res) => {
     let detectedColor = color;
     let rgbValue = null;
 
-    // If image provided, extract colour — fall back gracefully if processing fails
-    if (imagePath) {
+    // If image provided, extract colour from buffer — no disk I/O needed
+    if (imageBuffer) {
       try {
-        rgbValue = await extractAverageColor(imagePath);
+        rgbValue = await extractAverageColorFromBuffer(imageBuffer);
         detectedColor = rgbToColor(rgbValue.r, rgbValue.g, rgbValue.b);
       } catch (imgError) {
-        console.error('Image processing failed, checking for manual color fallback:', imgError.message);
-        // If color was also provided as fallback, use it
+        console.error('Image processing failed, using manual color fallback:', imgError.message);
         if (color) {
           detectedColor = color;
         } else {
@@ -71,7 +70,7 @@ const submitScan = async (req, res) => {
       bandageId: bandage._id,
       patientId: bandage.patientId,
       nurseId,
-      imageUrl: imagePath ? `/${imagePath.replace(/\\/g, '/')}` : null,
+      imageUrl: null, // No disk storage on Render free tier
       colorDetected: detectedColor,
       rgbValue: rgbValue || { r: 0, g: 0, b: 0 },
       phValue: parseFloat(phValue.toFixed(2)),
