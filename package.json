@@ -1,0 +1,9 @@
+{
+    "name": "ph-bandage",
+    "version": "1.0.0",
+    "description": "pH-based Smart Bandage Infection Detection System",
+    "scripts": {
+        "start": "node backend/server.js",
+        "install-all": "cd backend && npm install && cd ../frontend && npm install"
+    }
+}
