@@ -18,49 +18,60 @@ const submitScan = async (req, res) => {
       return res.status(400).json({ message: 'Bandage ID is required' });
     }
 
-    // Find bandage by bandageId string or MongoDB ID
+    // Find bandage — try string bandageId first, then ObjectId
     const mongoose = require('mongoose');
-    const isObjectId = mongoose.Types.ObjectId.isValid(bandageId);
-    const query = isObjectId
-      ? { $or: [{ _id: bandageId }, { bandageId: bandageId }] }
-      : { bandageId: bandageId };
-    let bandage = await Bandage.findOne(query);
-    
+    let bandage = await Bandage.findOne({ bandageId: bandageId });
+    if (!bandage && mongoose.Types.ObjectId.isValid(bandageId)) {
+      bandage = await Bandage.findById(bandageId);
+    }
+
     if (!bandage) {
-      return res.status(404).json({ message: 'Bandage not found' });
+      return res.status(404).json({
+        message: `Bandage "${bandageId}" not found. Please check the ID and try again. Valid IDs look like: BANDAGE-001`
+      });
     }
 
     let detectedColor = color;
     let rgbValue = null;
 
-    // If image is provided, extract color
+    // If image provided, extract colour — fall back gracefully if processing fails
     if (imagePath) {
       try {
         rgbValue = await extractAverageColor(imagePath);
         detectedColor = rgbToColor(rgbValue.r, rgbValue.g, rgbValue.b);
-      } catch (error) {
-        return res.status(400).json({ message: 'Failed to process image', error: error.message });
+      } catch (imgError) {
+        console.error('Image processing failed, checking for manual color fallback:', imgError.message);
+        // If color was also provided as fallback, use it
+        if (color) {
+          detectedColor = color;
+        } else {
+          return res.status(400).json({
+            message: 'Failed to process the uploaded image. Please select a color manually instead.'
+          });
+        }
       }
     } else if (!color) {
-      return res.status(400).json({ message: 'Either image upload or color selection is required' });
+      return res.status(400).json({ message: 'Please upload an image or select a color manually.' });
     }
 
-    // Validate color
+    // Validate colour
     const validColors = ['Yellow', 'Green', 'Blue', 'Dark Blue'];
     if (!validColors.includes(detectedColor)) {
-      return res.status(400).json({ message: 'Invalid color detected or selected' });
+      return res.status(400).json({
+        message: `Color "${detectedColor}" is not recognised. Please select: Yellow, Green, Blue, or Dark Blue.`
+      });
     }
 
-    // Calculate pH value and infection level
+    // Calculate pH and infection level
     const phValue = colorToPhValue(detectedColor);
     const infectionLevel = getInfectionLevel(phValue);
 
-    // Create scan record
+    // Save scan
     const scan = new Scan({
       bandageId: bandage._id,
       patientId: bandage.patientId,
       nurseId,
-      imageUrl: imagePath || null,
+      imageUrl: imagePath ? `/${imagePath.replace(/\\/g, '/')}` : null,
       colorDetected: detectedColor,
       rgbValue: rgbValue || { r: 0, g: 0, b: 0 },
       phValue: parseFloat(phValue.toFixed(2)),
@@ -75,7 +86,7 @@ const submitScan = async (req, res) => {
       scan: {
         id: scan._id,
         bandageId: bandage.bandageId,
-        color: detectedColor,
+        colorDetected: detectedColor,
         phValue: scan.phValue,
         infectionLevel,
         timestamp: scan.timestamp,
@@ -83,10 +94,9 @@ const submitScan = async (req, res) => {
     });
   } catch (error) {
     console.error('Scan submission error:', error);
-    res.status(500).json({ 
-      message: 'Server error', 
+    res.status(500).json({
+      message: 'An unexpected server error occurred. Please try again.',
       error: error.message,
-      details: error.stack 
     });
   }
 };
