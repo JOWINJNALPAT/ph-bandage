@@ -94,7 +94,7 @@ function Logo({ size = 48, showText = false, variant = 'default' }) {
                         letterSpacing: '0.2px',
                         lineHeight: 1.3,
                     }}>
-                        Smart Wound Care System
+                        Medical Platform
                     </div>
                 </div>
             )}

@@ -5,7 +5,7 @@ import Logo from './Logo';
 
 const roleConfig = {
     admin: {
-        label: 'Administrator',
+        label: 'Admin',
         color: '#a855f7',
         gradient: 'linear-gradient(135deg,#a855f7,#4f8ef7)',
         navItems: [
@@ -15,7 +15,7 @@ const roleConfig = {
         ],
     },
     doctor: {
-        label: 'Physician',
+        label: 'Doctor',
         color: '#4f8ef7',
         gradient: 'linear-gradient(135deg,#4f8ef7,#22d3ee)',
         navItems: [
@@ -23,7 +23,7 @@ const roleConfig = {
         ],
     },
     nurse: {
-        label: 'Nursing Staff',
+        label: 'Nurse',
         color: '#22d3ee',
         gradient: 'linear-gradient(135deg,#22d3ee,#10b981)',
         navItems: [
