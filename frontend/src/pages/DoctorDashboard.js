@@ -23,13 +23,11 @@ function DoctorDashboard() {
   const fetchPatients = async () => {
     try {
       setLoading(true);
-      const response = await patientAPI.getMyPatients();
-      setPatients(response.data.patients);
+      const res = await patientAPI.getMyPatients();
+      setPatients(res.data.patients);
     } catch (err) {
       setError(err.response?.data?.message || 'Failed to fetch patients');
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
   const filtered = patients.filter(p =>
@@ -37,76 +35,97 @@ function DoctorDashboard() {
     p.patientId?.toLowerCase().includes(search.toLowerCase())
   );
 
+  const activeCount = patients.filter(p => p.woundStatus === 'Active').length;
+  const criticalCount = patients.filter(p => p.woundStatus === 'Critical').length;
+
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'Dr';
+
   return (
     <div style={{ display: 'flex', minHeight: '100vh' }}>
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="dashboard-layout">
-        {/* Topbar */}
+
+        {/* ── Topbar ─────────────────────────────── */}
         <header className="topbar">
           <div>
             <h1 className="topbar-title">Doctor Dashboard</h1>
-            <p className="topbar-subtitle">Monitor your patients and review infection analytics.</p>
+            <p className="topbar-subtitle">Monitor your patients and review infection analytics</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{user?.name}</div>
+              <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-primary)' }}>{user?.name}</div>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Physician · Wound Care Unit</div>
             </div>
-            <div style={{
-              width: 40, height: 40,
+            <div className="user-avatar" style={{
               background: 'linear-gradient(135deg,#4f8ef7,#22d3ee)',
-              borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 18
-            }}>👨‍⚕️</div>
+              fontSize: 12,
+            }}>
+              {initials}
+            </div>
           </div>
         </header>
 
-        {/* Quick stats */}
+        {/* ── Stats ─────────────────────────────────── */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
-          <div className="glass-card stat-card blue" style={{ padding: 20 }}>
-            <div className="stat-label">Total Patients</div>
-            <div className="stat-value" style={{ fontSize: 28 }}>{patients.length}</div>
-          </div>
-          <div className="glass-card stat-card green" style={{ padding: 20 }}>
-            <div className="stat-label">Active Cases</div>
-            <div className="stat-value" style={{ fontSize: 28 }}>{patients.filter(p => p.woundStatus === 'Active').length}</div>
-          </div>
-          <div className="glass-card stat-card red" style={{ padding: 20 }}>
-            <div className="stat-label">Needs Attention</div>
-            <div className="stat-value" style={{ fontSize: 28 }}>{patients.filter(p => p.woundStatus === 'Critical').length}</div>
-          </div>
+          {[
+            { label: 'Total Patients', value: patients.length, color: 'blue', icon: '🏥', trend: 'All assigned patients' },
+            { label: 'Active Cases', value: activeCount, color: 'green', icon: '✅', trend: 'Currently under care' },
+            { label: 'Needs Attention', value: criticalCount, color: 'red', icon: '⚠️', trend: 'Requires immediate review' },
+          ].map((s, i) => (
+            <div key={i} className={`glass-card stat-card ${s.color} fade-in-${i + 1}`}>
+              <div style={{ fontSize: 22, marginBottom: 8 }}>{s.icon}</div>
+              <div className="stat-label">{s.label}</div>
+              <div className="stat-value">{loading ? '—' : s.value}</div>
+              <div className="stat-trend">{s.trend}</div>
+            </div>
+          ))}
         </div>
 
-        {/* Search + Patient List */}
+        {/* ── Patient list ────────────────────────── */}
         <div className="section-header">
           <div>
-            <h2 className="section-title">🏥 My Patients</h2>
-            <p className="section-subtitle">Click a patient card to view full scan history</p>
+            <div className="section-title">🏥 My Patients</div>
+            <div className="section-subtitle">
+              {loading ? 'Loading...' : `${filtered.length} patient${filtered.length !== 1 ? 's' : ''} found`}
+            </div>
           </div>
-          <input
-            id="patient-search"
-            className="form-input"
-            type="text"
-            placeholder="Search by name or ID..."
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-            style={{ width: 240 }}
-          />
+          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <span style={{
+                position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
+                fontSize: 14, pointerEvents: 'none',
+              }}>🔍</span>
+              <input
+                id="patient-search"
+                className="form-input"
+                type="text"
+                placeholder="Search name or ID..."
+                value={search}
+                onChange={e => setSearch(e.target.value)}
+                style={{ paddingLeft: 36, width: 220 }}
+              />
+            </div>
+            <button className="btn-icon" onClick={fetchPatients} title="Refresh">↻</button>
+          </div>
         </div>
 
-        {error && <div className="alert alert-error">⚠ {error}</div>}
+        {error && <div className="alert alert-error"><span>⚠</span> {error}</div>}
 
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 60 }}>
-            <div className="spinner" style={{ width: 36, height: 36 }}></div>
+          <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
+            <div className="spinner" style={{ width: 38, height: 38 }} />
           </div>
         ) : filtered.length === 0 ? (
-          <div className="glass-card" style={{ textAlign: 'center', padding: 60 }}>
-            <div style={{ fontSize: 48, marginBottom: 16 }}>🏥</div>
-            <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>No patients found</div>
-            <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 6 }}>
-              {search ? 'Try a different search.' : 'No patients have been assigned yet.'}
+          <div className="glass-card">
+            <div className="empty-state">
+              <span className="empty-state-icon">🏥</span>
+              <div className="empty-state-title">No patients found</div>
+              <div className="empty-state-text">
+                {search ? 'Try adjusting your search terms.' : 'No patients have been assigned to you yet.'}
+              </div>
             </div>
           </div>
         ) : (
@@ -114,42 +133,48 @@ function DoctorDashboard() {
             {filtered.map((patient, i) => (
               <div
                 key={patient._id}
-                className="glass-card fade-in"
-                style={{ padding: 24, animationDelay: `${i * 50}ms`, cursor: 'default' }}
+                className="glass-card interactive fade-in"
+                style={{ padding: 22, animationDelay: `${i * 40}ms`, cursor: 'default' }}
               >
                 {/* Card header */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+                    {/* Patient avatar */}
                     <div style={{
-                      width: 44, height: 44,
-                      background: 'linear-gradient(135deg,#4f8ef7,#a855f7)',
-                      borderRadius: 12,
-                      display: 'flex', alignItems: 'center',
-                      justifyContent: 'center', fontSize: 20, flexShrink: 0
+                      width: 44, height: 44, flexShrink: 0,
+                      background: patient.gender === 'Female'
+                        ? 'linear-gradient(135deg,#a855f7,#f97316)'
+                        : 'linear-gradient(135deg,#4f8ef7,#22d3ee)',
+                      borderRadius: 'var(--radius-md)',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center',
+                      fontSize: 12, fontWeight: 800, color: '#fff',
+                      letterSpacing: '-0.5px',
                     }}>
-                      {patient.gender === 'Female' ? '👩' : '👨'}
+                      {patient.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)' }}>{patient.name}</div>
-                      <div style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>{patient.patientId}</div>
+                      <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 2 }}>
+                        {patient.name}
+                      </div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+                        {patient.patientId}
+                      </div>
                     </div>
                   </div>
-                  <span className={`badge ${getBadgeClass(patient.woundStatus)}`}>{patient.woundStatus || 'Active'}</span>
+                  <span className={`badge ${getBadgeClass(patient.woundStatus)}`}>
+                    {patient.woundStatus || 'Active'}
+                  </span>
                 </div>
 
-                {/* Patient info grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 20 }}>
+                {/* Info grid */}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 18 }}>
                   {[
                     { label: 'Age', value: `${patient.age} yrs` },
                     { label: 'Gender', value: patient.gender },
                   ].map(item => (
-                    <div key={item.label} style={{
-                      background: 'rgba(255,255,255,0.03)',
-                      border: '1px solid var(--border)',
-                      borderRadius: 8, padding: '8px 12px'
-                    }}>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.5px' }}>{item.label}</div>
-                      <div style={{ fontSize: 14, color: 'var(--text-primary)', fontWeight: 600, marginTop: 2 }}>{item.value}</div>
+                    <div key={item.label} className="info-cell">
+                      <div className="info-cell-label">{item.label}</div>
+                      <div className="info-cell-value">{item.value}</div>
                     </div>
                   ))}
                 </div>
@@ -158,7 +183,7 @@ function DoctorDashboard() {
                   id={`view-patient-${patient._id}`}
                   to={`/patient/${patient._id}`}
                   className="btn-primary"
-                  style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: 8 }}
+                  style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', padding: '10px' }}
                 >
                   View Scans & Analysis →
                 </Link>

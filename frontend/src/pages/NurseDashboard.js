@@ -2,12 +2,15 @@ import React, { useState } from 'react';
 import { scanAPI } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from '../components/Sidebar';
+import ScanUpload from '../components/ScanUpload';
+import AnalysisResult from '../components/AnalysisResult';
+import CameraScanner from '../components/CameraScanner';
 
 const COLORS = [
-  { id: 'Yellow', label: 'Yellow', dot: '#EAB308', bg: 'rgba(234,179,8,0.15)', border: 'rgba(234,179,8,0.4)', text: '#eab308', ph: '5.5–6.0', status: 'Healthy' },
-  { id: 'Green', label: 'Green', dot: '#22C55E', bg: 'rgba(34,197,94,0.15)', border: 'rgba(34,197,94,0.4)', text: '#22c55e', ph: '6.5–7.0', status: 'Mild Risk' },
-  { id: 'Blue', label: 'Blue', dot: '#3B82F6', bg: 'rgba(59,130,246,0.15)', border: 'rgba(59,130,246,0.4)', text: '#3b82f6', ph: '7.5–8.0', status: 'Medium Infection' },
-  { id: 'Dark Blue', label: 'Dark Blue', dot: '#1E3A8A', bg: 'rgba(30,58,138,0.3)', border: 'rgba(30,58,138,0.6)', text: '#93c5fd', ph: '8.5–9.0', status: 'High Infection' },
+  { id: 'Yellow', label: 'Yellow', dot: '#EAB308', bg: 'rgba(234,179,8,0.12)', border: 'rgba(234,179,8,0.4)', text: '#fbbf24', ph: '5.5–6.0', status: 'Healthy' },
+  { id: 'Green', label: 'Green', dot: '#22C55E', bg: 'rgba(34,197,94,0.12)', border: 'rgba(34,197,94,0.4)', text: '#34d399', ph: '6.5–7.0', status: 'Mild Risk' },
+  { id: 'Blue', label: 'Blue', dot: '#3B82F6', bg: 'rgba(59,130,246,0.12)', border: 'rgba(59,130,246,0.4)', text: '#7eb0ff', ph: '7.5–8.0', status: 'Medium Infection' },
+  { id: 'Dark Blue', label: 'Dark Blue', dot: '#1E3A8A', bg: 'rgba(30,58,138,0.25)', border: 'rgba(30,58,138,0.55)', text: '#93c5fd', ph: '8.5–9.0', status: 'High Infection' },
 ];
 
 function getBadgeClass(level) {
@@ -21,51 +24,98 @@ function NurseDashboard() {
   const { user } = useAuth();
   const [activeTab, setActiveTab] = useState('scan');
   const [bandageId, setBandageId] = useState('');
-  const [selectedColor, setSelectedColor] = useState('');
-  const [image, setImage] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [loading, setLoading] = useState(false);
   const [message, setMessage] = useState({ text: '', type: '' });
   const [scanHistory, setScanHistory] = useState([]);
+  const [latestResult, setLatestResult] = useState(null);
+  const [showResult, setShowResult] = useState(false);
+  const [isScanning, setIsScanning] = useState(false);
 
-  const handleImageChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      const reader = new FileReader();
-      reader.onloadend = () => setPreview(reader.result);
-      reader.readAsDataURL(file);
-      setSelectedColor('');
-    }
-  };
+  const initials = user?.name
+    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
+    : 'N';
 
-  const handleSubmitScan = async (e) => {
-    e.preventDefault();
+  const handleScanSubmit = async (scanData) => {
     setLoading(true);
     setMessage({ text: '', type: '' });
     try {
       const formData = new FormData();
-      formData.append('bandageId', bandageId.trim());
+      formData.append('bandageId', scanData.bandageId.trim());
 
-      if (image) {
-        formData.append('image', image);
-      } else if (selectedColor) {
-        formData.append('color', selectedColor);
-      } else {
-        setMessage({ text: 'Please select a color or upload an image.', type: 'error' });
-        setLoading(false);
-        return;
+      if (scanData.image) {
+        formData.append('image', scanData.image);
+      } else if (scanData.color) {
+        formData.append('color', scanData.color);
       }
+
       const response = await scanAPI.submitScan(formData);
       const scan = response.data.scan;
-      setMessage({ text: `Scan submitted! Infection Level: ${scan.infectionLevel} · pH ${scan.phValue}`, type: 'success' });
-      setScanHistory(prev => [scan, ...prev]);
-      setBandageId(''); setSelectedColor(''); setImage(null); setPreview(null);
+
+      // Format scan data for display
+      const resultData = {
+        ...scan,
+        _id: scan._id || Math.random().toString(36).substr(2, 9),
+        timestamp: scan.timestamp || new Date().toISOString(),
+      };
+
+      setLatestResult(resultData);
+      setShowResult(true);
+      setMessage({
+        text: `✅ Scan analyzed successfully! ${scan.infectionLevel}`,
+        type: 'success',
+      });
+      setScanHistory(prev => [resultData, ...prev]);
+      setBandageId('');
     } catch (error) {
-      setMessage({ text: error.response?.data?.message || 'Failed to submit scan.', type: 'error' });
+      setMessage({
+        text: error.response?.data?.message || 'Failed to submit scan.',
+        type: 'error'
+      });
+      setShowResult(false);
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleManualScanFromCamera = async (scanData) => {
+    setIsScanning(false);
+    setLoading(true);
+    try {
+      // Create a simulated form compatible with existing backend
+      const formData = new FormData();
+      formData.append('bandageId', bandageId.trim());
+      formData.append('color', scanData.colorDetected);
+
+      const response = await scanAPI.submitScan(formData);
+      const scan = response.data.scan;
+
+      const resultData = {
+        ...scan,
+        _id: scan._id || Math.random().toString(36).substr(2, 9),
+        timestamp: scan.timestamp || new Date().toISOString(),
+        confidence: scanData.confidence // Use camera's confidence
+      };
+
+      setLatestResult(resultData);
+      setShowResult(true);
+      setMessage({
+        text: `✅ Scan analyzed successfully! ${scan.infectionLevel}`,
+        type: 'success',
+      });
+      setScanHistory(prev => [resultData, ...prev]);
+      setBandageId('');
+    } catch (error) {
+      setMessage({
+        text: error.response?.data?.message || 'Failed to submit scan.',
+        type: 'error'
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleColorSelect = (color) => {
+    // Color selected, ready to submit
   };
 
   return (
@@ -73,173 +123,133 @@ function NurseDashboard() {
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
       <main className="dashboard-layout">
-        {/* Topbar */}
+
+        {/* ── Topbar ─────────────────────────────── */}
         <header className="topbar">
           <div>
-            <h1 className="topbar-title">Nurse Workstation</h1>
-            <p className="topbar-subtitle">Submit bandage scans and track infection status in real time.</p>
+            <h1 className="topbar-title">🏥 Nurse Workstation</h1>
+            <p className="topbar-subtitle">Smart Bandage Analysis — Submit scans for real-time infection detection</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
             <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 600, fontSize: 14, color: 'var(--text-primary)' }}>{user?.name}</div>
+              <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-primary)' }}>{user?.name}</div>
               <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Nursing Staff</div>
             </div>
-            <div style={{
-              width: 40, height: 40,
-              background: 'linear-gradient(135deg,#22d3ee,#10b981)',
-              borderRadius: '50%',
-              display: 'flex', alignItems: 'center', justifyContent: 'center',
-              fontSize: 18
-            }}>👩‍⚕️</div>
+            <div className="user-avatar" style={{ background: 'linear-gradient(135deg,#22d3ee,#10b981)', fontSize: 12 }}>
+              {initials}
+            </div>
           </div>
         </header>
 
+        {/* ── Scan Tab ─────────────────────────────── */}
         {activeTab === 'scan' && (
-          <div className="fade-in">
+          <div className="fade-in" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 24, maxWidth: 1400 }}>
+            {/* Left: Upload Component */}
+            <div>
+              <ScanUpload
+                onScanSubmit={handleScanSubmit}
+                onColorSelect={handleColorSelect}
+                onCameraOpen={() => {
+                  if (!bandageId.trim()) { alert('Please enter a Bandage ID first.'); return; }
+                  setIsScanning(true);
+                }}
+                isLoading={loading}
+                bandageId={bandageId}
+                setBandageId={setBandageId}
+              />
+            </div>
 
-            {/* Scan Form */}
-            <div className="glass-card" style={{ padding: 32, maxWidth: 640 }}>
-              <div style={{ marginBottom: 28 }}>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 4 }}>
-                  📸 Submit Bandage Scan
-                </h2>
-                <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
-                  Enter the bandage ID and either upload a photo or select the observed color.
-                </p>
-              </div>
+            {isScanning && (
+              <CameraScanner
+                onScanComplete={handleManualScanFromCamera}
+                onCancel={() => setIsScanning(false)}
+              />
+            )}
 
+            {/* Right: Result Display */}
+            <div>
               {message.text && (
-                <div className={message.type === 'success' ? 'alert alert-success' : 'alert alert-error'}>
-                  {message.type === 'success' ? '✅' : '⚠'} {message.text}
+                <div className={`alert ${message.type === 'success' ? 'alert-success' : 'alert-error'}`} style={{ marginBottom: 20 }}>
+                  <span>{message.type === 'success' ? '✅' : '⚠️'}</span>
+                  {message.text}
                 </div>
               )}
-
-              <form onSubmit={handleSubmitScan}>
-                {/* Bandage ID */}
-                <div style={{ marginBottom: 20 }}>
-                  <label className="form-label">Bandage ID</label>
-                  <input
-                    id="bandage-id-input"
-                    className="form-input"
-                    type="text"
-                    value={bandageId}
-                    onChange={e => setBandageId(e.target.value.trimStart().toUpperCase())}
-
-                    required
-                    placeholder="e.g. BANDAGE-001"
-                  />
+              {loading ? (
+                <AnalysisResult isLoading={true} />
+              ) : showResult && latestResult ? (
+                <AnalysisResult
+                  scan={latestResult}
+                  onClose={() => setShowResult(false)}
+                />
+              ) : (
+                <div className="glass-card" style={{
+                  padding: 40,
+                  textAlign: 'center',
+                  borderRadius: 'var(--radius-lg)',
+                  background: 'linear-gradient(135deg, rgba(79,142,247,0.05), rgba(34,211,238,0.05))',
+                  border: '1px dashed var(--border)',
+                }}>
+                  <div style={{ fontSize: 48, marginBottom: 16 }}>📊</div>
+                  <h3 style={{ fontSize: 16, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 8 }}>
+                    Analysis Results
+                  </h3>
+                  <p style={{ color: 'var(--text-secondary)', fontSize: 13 }}>
+                    Submit a bandage scan and the analysis results will appear here in real-time
+                  </p>
                 </div>
-
-                {/* Image Upload */}
-                <div style={{ marginBottom: 20 }}>
-                  <label className="form-label">Upload Bandage Photo</label>
-                  <label style={{
-                    display: 'block',
-                    border: '2px dashed var(--border)',
-                    borderRadius: 12,
-                    padding: '28px 20px',
-                    textAlign: 'center',
-                    cursor: 'pointer',
-                    transition: 'all 0.2s',
-                    background: preview ? 'rgba(79,142,247,0.05)' : 'transparent',
-                  }}
-                    onDragOver={e => { e.preventDefault(); }}
-                  >
-                    {preview ? (
-                      <img src={preview} alt="Preview" style={{ maxHeight: 160, margin: '0 auto', borderRadius: 8, display: 'block' }} />
-                    ) : (
-                      <>
-                        <div style={{ fontSize: 36, marginBottom: 8 }}>📷</div>
-                        <div style={{ fontSize: 14, color: 'var(--text-secondary)' }}>Click to upload or drag & drop</div>
-                        <div style={{ fontSize: 12, color: 'var(--text-muted)', marginTop: 4 }}>PNG, JPG, JPEG up to 10MB</div>
-                      </>
-                    )}
-                    <input id="image-upload" type="file" accept="image/*" onChange={handleImageChange} style={{ display: 'none' }} />
-                  </label>
-                  {preview && (
-                    <button type="button" onClick={() => { setImage(null); setPreview(null); }}
-                      style={{ marginTop: 8, background: 'none', border: 'none', color: 'var(--accent-red)', cursor: 'pointer', fontSize: 13, fontWeight: 600 }}>
-                      ✕ Remove image
-                    </button>
-                  )}
-                </div>
-
-                {/* Color Selector */}
-                {!image && (
-                  <div style={{ marginBottom: 28 }}>
-                    <label className="form-label">Or Select Color Manually</label>
-                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-                      {COLORS.map(c => (
-                        <button
-                          key={c.id}
-                          type="button"
-                          id={`color-btn-${c.id.replace(' ', '-').toLowerCase()}`}
-                          onClick={() => setSelectedColor(c.id)}
-                          style={{
-                            background: selectedColor === c.id ? c.bg : 'rgba(255,255,255,0.03)',
-                            border: `2px solid ${selectedColor === c.id ? c.border : 'var(--border)'}`,
-                            borderRadius: 12,
-                            padding: '14px',
-                            cursor: 'pointer',
-                            transition: 'all 0.2s',
-                            display: 'flex',
-                            alignItems: 'center',
-                            gap: 10,
-                            transform: selectedColor === c.id ? 'translateY(-2px)' : 'none',
-                          }}
-                        >
-                          <div style={{ width: 28, height: 28, borderRadius: '50%', background: c.dot, flexShrink: 0, boxShadow: selectedColor === c.id ? `0 0 12px ${c.dot}` : 'none' }} />
-                          <div style={{ textAlign: 'left' }}>
-                            <div style={{ fontSize: 13, fontWeight: 700, color: selectedColor === c.id ? c.text : 'var(--text-primary)' }}>{c.label}</div>
-                            <div style={{ fontSize: 11, color: 'var(--text-muted)' }}>pH {c.ph}</div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                )}
-
-                <button
-                  id="submit-scan-btn"
-                  type="submit"
-                  className="btn-primary"
-                  disabled={loading}
-                  style={{ width: '100%', justifyContent: 'center', padding: '14px', fontSize: 15 }}
-                >
-                  {loading ? <><span className="spinner" style={{ width: 16, height: 16, marginRight: 8 }}></span>Submitting...</> : '✓ Submit Scan'}
-                </button>
-              </form>
+              )}
             </div>
           </div>
         )}
+
+        {/* ── History Tab ──────────────────────────── */}
         {activeTab === 'history' && (
           <div className="fade-in">
             <div className="section-header">
               <div>
-                <h2 className="section-title">Scan History (Session)</h2>
-                <p className="section-subtitle">{scanHistory.length} scans submitted this session</p>
+                <div className="section-title">📋 Scan History</div>
+                <div className="section-subtitle">{scanHistory.length} scan{scanHistory.length !== 1 ? 's' : ''} submitted this session</div>
               </div>
             </div>
+
             {scanHistory.length === 0 ? (
-              <div className="glass-card" style={{ textAlign: 'center', padding: 60 }}>
-                <div style={{ fontSize: 48, marginBottom: 16 }}>🔍</div>
-                <div style={{ fontSize: 16, fontWeight: 600, color: 'var(--text-primary)' }}>No scans yet</div>
-                <div style={{ fontSize: 14, color: 'var(--text-secondary)', marginTop: 6 }}>Submitted scans will appear here.</div>
+              <div className="glass-card">
+                <div className="empty-state">
+                  <span className="empty-state-icon">🔍</span>
+                  <div className="empty-state-title">No scans yet</div>
+                  <div className="empty-state-text">
+                    Scans you submit during this session will appear here.
+                  </div>
+                </div>
               </div>
             ) : (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
                 {scanHistory.map((scan, i) => {
                   const color = COLORS.find(c => c.id === scan.colorDetected) || COLORS[0];
                   return (
-                    <div key={i} className="glass-card" style={{ padding: '20px 24px', display: 'flex', alignItems: 'center', gap: 20 }}>
-                      <div style={{ width: 48, height: 48, borderRadius: '50%', background: color.dot, flexShrink: 0, boxShadow: `0 0 20px ${color.dot}50` }} />
+                    <div key={i} className="scan-row fade-in" style={{ animationDelay: `${i * 40}ms` }}>
+                      {/* Color dot */}
+                      <div style={{
+                        width: 44, height: 44, borderRadius: '50%',
+                        background: color.dot,
+                        flexShrink: 0,
+                        boxShadow: `0 0 18px ${color.dot}55`,
+                      }} />
+                      {/* Info */}
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 2 }}>Bandage Scan</div>
-                        <div style={{ fontSize: 13, color: 'var(--text-secondary)' }}>
-                          Color: {scan.colorDetected} · pH: {typeof scan.phValue === 'number' ? scan.phValue.toFixed(2) : scan.phValue}
+                        <div style={{ fontWeight: 700, fontSize: 14.5, color: 'var(--text-primary)', marginBottom: 3 }}>
+                          {scan.colorDetected} Bandage
+                        </div>
+                        <div style={{ fontSize: 12.5, color: 'var(--text-secondary)' }}>
+                          pH: <span style={{ fontWeight: 700, color: 'var(--blue)' }}>
+                            {typeof scan.phValue === 'number' ? scan.phValue.toFixed(2) : scan.phValue}
+                          </span>
+                          {' · '}Bandage ID: <span style={{ fontFamily: 'monospace' }}>{scan.bandageId}</span>
                         </div>
                       </div>
-                      <span className={`badge ${getBadgeClass(scan.infectionLevel)}`}>{scan.infectionLevel}</span>
+                      <span className={`badge ${getBadgeClass(scan.infectionLevel)}`}>
+                        {scan.infectionLevel}
+                      </span>
                     </div>
                   );
                 })}

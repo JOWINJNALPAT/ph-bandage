@@ -42,6 +42,10 @@ const scanSchema = new mongoose.Schema(
       enum: ['Healthy', 'Mild Risk', 'Medium Infection', 'High Infection'],
       required: true,
     },
+    confidence: {
+      type: Number,
+      default: 0,
+    },
     notes: {
       type: String,
       default: '',

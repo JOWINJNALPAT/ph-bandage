@@ -3,24 +3,24 @@ const Bandage = require('../models/Bandage');
 const Patient = require('../models/Patient');
 const { extractAverageColorFromBuffer } = require('../utils/imageProcessor');
 const { rgbToColor, colorToPhValue, getInfectionLevel } = require('../utils/colorAnalysis');
+// 
 
 /**
  * Submit a scan with image or manual color
  */
 const submitScan = async (req, res) => {
   try {
-    const { bandageId: rawBandageId, color } = req.body;
+    const { bandageId: rawBandageId, color, confidence, phValue: manualPh } = req.body;
     const bandageId = (rawBandageId || '').trim();
     const nurseId = req.user.id;
-    const imageBuffer = req.file?.buffer; // memoryStorage gives us buffer directly
-
+    const imageBuffer = req.file?.buffer;
 
     // Validate input
     if (!bandageId) {
       return res.status(400).json({ message: 'Bandage ID is required' });
     }
 
-    // Find bandage — try string bandageId first, then ObjectId
+    // Find bandage
     const mongoose = require('mongoose');
     let bandage = await Bandage.findOne({ bandageId: bandageId });
     if (!bandage && mongoose.Types.ObjectId.isValid(bandageId)) {
@@ -29,25 +29,28 @@ const submitScan = async (req, res) => {
 
     if (!bandage) {
       return res.status(404).json({
-        message: `Bandage "${bandageId}" not found. Please check the ID and try again. Valid IDs look like: BANDAGE-001`
+        message: `Bandage "${bandageId}" not found. Please check the ID and try again. Valid IDs look like: BANDAGE-001`,
       });
     }
 
     let detectedColor = color;
     let rgbValue = null;
+    let phValue;
+    let infectionLevel;
+    let scanConfidence = confidence ? parseFloat(confidence) : 0;
 
-    // If image provided, extract colour from buffer — no disk I/O needed
+    // ── Analyze image or use color ──────────────
     if (imageBuffer) {
       try {
         rgbValue = await extractAverageColorFromBuffer(imageBuffer);
         detectedColor = rgbToColor(rgbValue.r, rgbValue.g, rgbValue.b);
       } catch (imgError) {
-        console.error('Image processing failed, using manual color fallback:', imgError.message);
+        console.error('Image processing failed:', imgError.message);
         if (color) {
           detectedColor = color;
         } else {
           return res.status(400).json({
-            message: 'Failed to process the uploaded image. Please select a color manually instead.'
+            message: 'Failed to process the uploaded image. Please select a color manually instead.',
           });
         }
       }
@@ -59,24 +62,29 @@ const submitScan = async (req, res) => {
     const validColors = ['Yellow', 'Green', 'Blue', 'Dark Blue'];
     if (!validColors.includes(detectedColor)) {
       return res.status(400).json({
-        message: `Color "${detectedColor}" is not recognised. Please select: Yellow, Green, Blue, or Dark Blue.`
+        message: `Color "${detectedColor}" is not recognised. Please select: Yellow, Green, Blue, or Dark Blue.`,
       });
     }
 
-    // Calculate pH and infection level
-    const phValue = colorToPhValue(detectedColor);
-    const infectionLevel = getInfectionLevel(phValue);
+    // Calculate pH / infection if not already set
+    if (phValue === undefined) {
+      phValue = manualPh ? parseFloat(manualPh) : colorToPhValue(detectedColor);
+    }
+    if (infectionLevel === undefined) {
+      infectionLevel = getInfectionLevel(phValue);
+    }
 
     // Save scan
     const scan = new Scan({
       bandageId: bandage._id,
       patientId: bandage.patientId,
       nurseId,
-      imageUrl: null, // No disk storage on Render free tier
+      imageUrl: null,
       colorDetected: detectedColor,
       rgbValue: rgbValue || { r: 0, g: 0, b: 0 },
       phValue: parseFloat(phValue.toFixed(2)),
       infectionLevel,
+      confidence: scanConfidence,
       timestamp: new Date(),
     });
 
@@ -90,6 +98,7 @@ const submitScan = async (req, res) => {
         colorDetected: detectedColor,
         phValue: scan.phValue,
         infectionLevel,
+        confidence: scan.confidence,
         timestamp: scan.timestamp,
       },
     });
@@ -108,14 +117,11 @@ const submitScan = async (req, res) => {
 const getScanHistory = async (req, res) => {
   try {
     const { patientId } = req.params;
-
-    // Find patient
     const patient = await Patient.findById(patientId);
     if (!patient) {
       return res.status(404).json({ message: 'Patient not found' });
     }
 
-    // Get all scans for the patient
     const scans = await Scan.find({ patientId })
       .populate('nurseId', 'name email')
       .sort({ timestamp: -1 });
@@ -136,7 +142,6 @@ const getScanHistory = async (req, res) => {
 const getLatestScan = async (req, res) => {
   try {
     const { patientId } = req.params;
-
     const scan = await Scan.findOne({ patientId })
       .sort({ timestamp: -1 })
       .populate('nurseId', 'name email');

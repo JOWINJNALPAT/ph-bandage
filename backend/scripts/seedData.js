@@ -1,6 +1,5 @@
 require('dotenv').config();
 const mongoose = require('mongoose');
-const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Patient = require('../models/Patient');
 const Bandage = require('../models/Bandage');
@@ -19,17 +18,16 @@ async function seed() {
   await User.deleteMany({});
   console.log('🗑️  Cleared existing data');
 
-  const salt = await bcrypt.genSalt(10);
-  const hash = (pw) => bcrypt.hash(pw, salt);
-
   // ── 1 Admin ──────────────────────────────────────────────
-  const admin = await User.create({
+  // Use save() so the pre-save password hashing hook runs
+  const admin = new User({
     name: 'Dr. Admin Raj',
     email: 'admin@hospital.com',
-    password: await hash('password123'),
+    password: 'password123',
     role: 'admin',
     department: 'Administration',
   });
+  await admin.save();
 
   // ── 5 Doctors ────────────────────────────────────────────
   const doctorData = [
@@ -40,13 +38,12 @@ async function seed() {
     { name: 'Dr. Ananya Sharma', email: 'ananya@hospital.com', department: 'General Medicine' },
   ];
 
-  const doctors = await User.insertMany(
-    await Promise.all(doctorData.map(async (d) => ({
-      ...d,
-      password: await hash('password123'),
-      role: 'doctor',
-    })))
-  );
+  const doctors = [];
+  for (const d of doctorData) {
+    const doc = new User({ ...d, password: 'password123', role: 'doctor' });
+    await doc.save();
+    doctors.push(doc);
+  }
 
   // ── 5 Nurses ─────────────────────────────────────────────
   const nurseData = [
@@ -57,51 +54,57 @@ async function seed() {
     { name: 'Sunita Patel', email: 'sunita@hospital.com', department: 'General Medicine' },
   ];
 
-  const nurses = await User.insertMany(
-    await Promise.all(nurseData.map(async (n) => ({
-      ...n,
-      password: await hash('password123'),
-      role: 'nurse',
-    })))
-  );
+  const nurses = [];
+  for (const n of nurseData) {
+    const nurse = new User({ ...n, password: 'password123', role: 'nurse' });
+    await nurse.save();
+    nurses.push(nurse);
+  }
 
   console.log('👤 Created 1 admin, 5 doctors, 5 nurses');
 
   // ── 10 Patients (2 per doctor) ───────────────────────────
   const patientRecords = [
-    { name: 'John Doe', age: 45, gender: 'Male', ward: 'Ward A', diagnosis: 'Post-surgical wound', doctorIndex: 0 },
-    { name: 'Jane Smith', age: 62, gender: 'Female', ward: 'Ward B', diagnosis: 'Diabetic foot ulcer', doctorIndex: 0 },
-    { name: 'Robert Brown', age: 38, gender: 'Male', ward: 'Ward C', diagnosis: 'Burn wound', doctorIndex: 1 },
-    { name: 'Mary Wilson', age: 55, gender: 'Female', ward: 'Ward A', diagnosis: 'Pressure sore', doctorIndex: 1 },
-    { name: 'Carlos Mendez', age: 29, gender: 'Male', ward: 'Ward D', diagnosis: 'Laceration wound', doctorIndex: 2 },
-    { name: 'Aisha Patel', age: 71, gender: 'Female', ward: 'Ward B', diagnosis: 'Venous leg ulcer', doctorIndex: 2 },
-    { name: 'David Okafor', age: 50, gender: 'Male', ward: 'Ward C', diagnosis: 'Infected wound', doctorIndex: 3 },
-    { name: 'Meera Krishnan', age: 44, gender: 'Female', ward: 'Ward A', diagnosis: 'Post-op wound', doctorIndex: 3 },
-    { name: 'Samuel Lee', age: 67, gender: 'Male', ward: 'Ward D', diagnosis: 'Chronic ulcer', doctorIndex: 4 },
-    { name: 'Fatima Al-Hassan', age: 33, gender: 'Female', ward: 'Ward B', diagnosis: 'Traumatic wound', doctorIndex: 4 },
+    { name: 'John Doe', age: 45, gender: 'Male', diagnosis: 'Post-surgical wound', doctorIndex: 0 },
+    { name: 'Jane Smith', age: 62, gender: 'Female', diagnosis: 'Diabetic foot ulcer', doctorIndex: 0 },
+    { name: 'Robert Brown', age: 38, gender: 'Male', diagnosis: 'Burn wound', doctorIndex: 1 },
+    { name: 'Mary Wilson', age: 55, gender: 'Female', diagnosis: 'Pressure sore', doctorIndex: 1 },
+    { name: 'Carlos Mendez', age: 29, gender: 'Male', diagnosis: 'Laceration wound', doctorIndex: 2 },
+    { name: 'Aisha Patel', age: 71, gender: 'Female', diagnosis: 'Venous leg ulcer', doctorIndex: 2 },
+    { name: 'David Okafor', age: 50, gender: 'Male', diagnosis: 'Infected wound', doctorIndex: 3 },
+    { name: 'Meera Krishnan', age: 44, gender: 'Female', diagnosis: 'Post-op wound', doctorIndex: 3 },
+    { name: 'Samuel Lee', age: 67, gender: 'Male', diagnosis: 'Chronic ulcer', doctorIndex: 4 },
+    { name: 'Fatima Al-Hassan', age: 33, gender: 'Female', diagnosis: 'Traumatic wound', doctorIndex: 4 },
   ];
 
   const patients = await Patient.insertMany(
-    patientRecords.map((p) => ({
+    patientRecords.map((p, i) => ({
+      patientId: `PAT-${String(i + 1).padStart(3, '0')}`,
       name: p.name,
       age: p.age,
       gender: p.gender,
-      ward: p.ward,
-      diagnosis: p.diagnosis,
-      doctorId: doctors[p.doctorIndex]._id,
+      medicalHistory: p.diagnosis,
+      assignedDoctor: doctors[p.doctorIndex]._id,
+      woundStatus: 'Active',
     }))
   );
 
   console.log('🏥 Created 10 patients (2 per doctor)');
 
   // ── Bandages (1 per patient) ─────────────────────────────
+  const woundLocations = [
+    'Left foot', 'Right foot', 'Abdomen', 'Lower back',
+    'Left arm', 'Right leg', 'Right arm', 'Abdomen',
+    'Left leg', 'Right shoulder',
+  ];
+
   const bandages = await Bandage.insertMany(
     patients.map((p, i) => ({
       bandageId: `BANDAGE-${String(i + 1).padStart(3, '0')}`,
       patientId: p._id,
-      type: 'pH Sensitive Strip',
+      woundLocation: woundLocations[i],
       appliedDate: new Date(),
-      active: true,
+      isActive: true,
     }))
   );
 
@@ -155,6 +158,6 @@ async function seed() {
 }
 
 seed().catch((err) => {
-  console.error('❌ Seed failed:', err);
+  console.error('❌ Seed failed:', err.message);
   process.exit(1);
 });
