@@ -117,13 +117,13 @@ function ScanUpload({ onScanSubmit, onColorSelect, onCameraOpen, isLoading, band
           background: 'linear-gradient(135deg, rgba(34,211,238,0.05), rgba(79,142,247,0.05))',
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 6 }}>
-            <span style={{ fontSize: 24 }}>🔬</span>
+            <span style={{ fontSize: 24 }}>📸</span>
             <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: 0 }}>
-              Smart Bandage Analysis
+              Submit Bandage Scan
             </h2>
           </div>
           <p style={{ fontSize: 13, color: 'var(--text-secondary)', margin: 0 }}>
-            Upload a bandage photo or select observed color for instant infection assessment
+            Enter the bandage ID and either upload a photo or select the observed color.
           </p>
         </div>
 
@@ -140,13 +140,13 @@ function ScanUpload({ onScanSubmit, onColorSelect, onCameraOpen, isLoading, band
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
               }}>
-                🏷️ Bandage Identifier
+                Bandage ID
               </label>
               <input
                 type="text"
                 value={bandageId}
                 onChange={(e) => setBandageId(e.target.value.toUpperCase())}
-                placeholder="Enter bandage ID (e.g. BANDAGE-001)"
+                placeholder="BANDAGE-001"
                 style={{
                   width: '100%',
                   padding: '12px 16px',
@@ -170,34 +170,18 @@ function ScanUpload({ onScanSubmit, onColorSelect, onCameraOpen, isLoading, band
               />
             </div>
 
-            {/* Camera Capture Button */}
-            <div style={{ marginBottom: 24 }}>
-              <button
-                type="button"
-                onClick={onCameraOpen}
-                style={{
-                  width: '100%',
-                  padding: '16px',
-                  borderRadius: 'var(--radius-lg)',
-                  background: 'rgba(79, 142, 247, 0.1)',
-                  border: '2px solid var(--blue)',
-                  color: 'var(--blue)',
-                  fontSize: 14,
-                  fontWeight: 700,
-                  cursor: 'pointer',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  gap: 12,
-                  transition: 'all 0.2s'
-                }}
-              >
-                <span style={{ fontSize: 24 }}>📸</span>
-                Open Real-time Scanner
-              </button>
-            </div>
+            <label style={{
+              display: 'block',
+              fontSize: 13,
+              fontWeight: 600,
+              color: 'var(--text-primary)',
+              marginBottom: 12,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}>
+              Upload Bandage Photo
+            </label>
 
-            {/* Upload Area or Preview */}
             {preview ? (
               <div style={{ marginBottom: 24 }}>
                 <div style={{
@@ -234,12 +218,6 @@ function ScanUpload({ onScanSubmit, onColorSelect, onCameraOpen, isLoading, band
                       justifyContent: 'center',
                       transition: 'all 0.2s ease',
                     }}
-                    onMouseEnter={(e) => {
-                      e.target.style.background = 'rgba(239, 68, 68, 0.9)';
-                    }}
-                    onMouseLeave={(e) => {
-                      e.target.style.background = 'rgba(0, 0, 0, 0.6)';
-                    }}
                   >
                     ✕
                   </button>
@@ -249,38 +227,68 @@ function ScanUpload({ onScanSubmit, onColorSelect, onCameraOpen, isLoading, band
                 </p>
               </div>
             ) : (
-              <div
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                onClick={() => fileInputRef.current?.click()}
-                style={{
-                  position: 'relative',
-                  borderRadius: 'var(--radius-lg)',
-                  border: `2px dashed ${dragActive ? 'var(--blue)' : 'var(--border)'}`,
-                  background: dragActive ? 'rgba(79, 142, 247, 0.08)' : 'rgba(255, 255, 255, 0.02)',
-                  padding: 30,
-                  textAlign: 'center',
-                  cursor: 'pointer',
-                  transition: 'all 0.3s ease',
-                  marginBottom: 24,
-                }}
-              >
-                <div style={{ fontSize: 32, marginBottom: 10 }}>📁</div>
-                <h3 style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)', margin: '0 0 2px 0' }}>
-                  Choose a Photo
-                </h3>
-                <p style={{ fontSize: 11, color: 'var(--text-secondary)', margin: 0 }}>
-                  Or drag and drop files here
-                </p>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/*"
-                  onChange={handleImageChange}
-                  hidden
-                />
+              <div style={{
+                display: 'grid', gridTemplateColumns: 'minmax(0, 1fr) minmax(0, 1fr)', gap: 12, marginBottom: 24
+              }}>
+                {/* Real-time Scanner Option */}
+                <button
+                  type="button"
+                  onClick={onCameraOpen}
+                  style={{
+                    padding: '16px',
+                    borderRadius: 'var(--radius-lg)',
+                    background: 'rgba(79, 142, 247, 0.08)',
+                    border: '2px solid var(--blue)',
+                    color: 'var(--blue)',
+                    fontSize: 13.5,
+                    fontWeight: 700,
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 8,
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <span style={{ fontSize: 28 }}>📸</span>
+                  Open Scanner
+                </button>
+
+                {/* File Upload Option */}
+                <div
+                  onDragEnter={handleDrag}
+                  onDragLeave={handleDrag}
+                  onDragOver={handleDrag}
+                  onDrop={handleDrop}
+                  onClick={() => fileInputRef.current?.click()}
+                  style={{
+                    position: 'relative',
+                    borderRadius: 'var(--radius-lg)',
+                    border: `2px dashed ${dragActive ? 'var(--blue)' : 'var(--border)'}`,
+                    background: dragActive ? 'rgba(79, 142, 247, 0.08)' : 'rgba(255, 255, 255, 0.02)',
+                    padding: 16,
+                    textAlign: 'center',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    gap: 6,
+                    transition: 'all 0.3s ease',
+                  }}
+                >
+                  <div style={{ fontSize: 28 }}>📷</div>
+                  <div style={{ fontSize: 13.5, fontWeight: 700, color: 'var(--text-primary)' }}>Click/Drag-Drop</div>
+                  <div style={{ fontSize: 10, color: 'var(--text-muted)' }}>PNG, JPG, JPEG Max 10MB</div>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageChange}
+                    hidden
+                  />
+                </div>
               </div>
             )}
 
@@ -295,7 +303,7 @@ function ScanUpload({ onScanSubmit, onColorSelect, onCameraOpen, isLoading, band
                 textTransform: 'uppercase',
                 letterSpacing: '0.5px',
               }}>
-                Or Select Observed Color
+                Or Select Color Manually
               </label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12 }}>
                 {COLORS.map(color => (
@@ -389,12 +397,12 @@ function ScanUpload({ onScanSubmit, onColorSelect, onCameraOpen, isLoading, band
                 e.target.style.boxShadow = 'none';
               }}
             >
-              {isLoading ? '🔄 Analyzing...' : '🚀 Submit Scan for Analysis'}
+              {isLoading ? '🔄 Analyzing...' : '✓ Submit Scan'}
             </button>
           </form>
         </div>
-      </div>
-    </div>
+      </div >
+    </div >
   );
 }
 

@@ -27,7 +27,7 @@ const roleConfig = {
         color: '#22d3ee',
         gradient: 'linear-gradient(135deg,#22d3ee,#10b981)',
         navItems: [
-            { id: 'scan', label: 'Submit Scan', icon: '🩺' },
+            { id: 'scan', label: 'Submit Scan', icon: '📸' },
             { id: 'history', label: 'Scan History', icon: '📋' },
         ],
     },
@@ -124,10 +124,12 @@ function Sidebar({ activeTab, onTabChange }) {
                     <span>⎋</span> Sign Out
                 </button>
                 <p style={{
-                    fontSize: 10, color: 'var(--text-muted)',
-                    textAlign: 'center', marginTop: 10, lineHeight: 1.5,
+                    fontSize: 10.5, color: '#10b981',
+                    textAlign: 'center', marginTop: 14, fontWeight: 700,
+                    display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6
                 }}>
-                    © 2026 pH Bandage System
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', display: 'block' }}></span>
+                    🟢 Connected · v2.0.0
                 </p>
             </div>
         </div>
