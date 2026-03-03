@@ -4,12 +4,6 @@ import { patientAPI } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import Sidebar from '../components/Sidebar';
 
-function getBadgeClass(status) {
-  if (status === 'Active') return 'badge-active';
-  if (status === 'Healed') return 'badge-healthy';
-  return 'badge-mild';
-}
-
 function DoctorDashboard() {
   const { user } = useAuth();
   const [patients, setPatients] = useState([]);
@@ -38,154 +32,136 @@ function DoctorDashboard() {
   const activeCount = patients.filter(p => p.woundStatus === 'Active').length;
   const criticalCount = patients.filter(p => p.woundStatus === 'Critical').length;
 
-  const initials = user?.name
-    ? user.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()
-    : 'Dr';
-
   return (
-    <div style={{ display: 'flex', minHeight: '100vh' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-primary)' }}>
       <Sidebar activeTab={activeTab} onTabChange={setActiveTab} />
 
-      <main className="dashboard-layout">
+      <main className="dashboard-layout" style={{ flex: 1 }}>
 
         {/* ── Topbar ─────────────────────────────── */}
-        <header className="topbar">
+        <header className="topbar" style={{ border: 'none', paddingBottom: 0, marginBottom: 40 }}>
           <div>
-            <h1 className="topbar-title">Doctor Dashboard</h1>
-            <p className="topbar-subtitle">Monitor your patients and review infection analytics</p>
-          </div>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-            <div style={{ textAlign: 'right' }}>
-              <div style={{ fontWeight: 700, fontSize: 13.5, color: 'var(--text-primary)' }}>{user?.name}</div>
-              <div style={{ fontSize: 12, color: 'var(--text-secondary)' }}>Physician · Wound Care Unit</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+              <span className="ai-data-tag">Physician Portal</span>
+              <span className="ai-data-tag" style={{ color: 'var(--blue)', borderColor: 'var(--blue)' }}>Unit 4-B Diagnostics</span>
             </div>
-            <div className="user-avatar" style={{
-              background: 'linear-gradient(135deg,#4f8ef7,#22d3ee)',
-              fontSize: 12,
+            <h1 className="topbar-title text-gradient-ai" style={{ fontSize: 32 }}>Medical Unit Dashboard</h1>
+            <p className="topbar-subtitle">System-wide patient monitoring and telemetry analysis</p>
+          </div>
+
+          <div className="glass-card" style={{ padding: '8px 16px', display: 'flex', alignItems: 'center', gap: 16, borderRadius: 12 }}>
+            <div style={{ textAlign: 'right' }}>
+              <div style={{ fontWeight: 800, fontSize: 13, color: 'var(--text-primary)' }}>{user?.name}</div>
+              <div style={{ fontSize: 11, color: 'var(--text-secondary)', textTransform: 'uppercase', letterSpacing: 1 }}>Wound Care Specialist</div>
+            </div>
+            <div style={{
+              width: 42, height: 42, borderRadius: 12, background: 'var(--grad-purple)',
+              display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 20
             }}>
-              {initials}
+              👨‍⚕️
             </div>
           </div>
         </header>
 
         {/* ── Stats ─────────────────────────────────── */}
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 16, marginBottom: 28 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 24, marginBottom: 40 }}>
           {[
-            { label: 'Total Patients', value: patients.length, color: 'blue', icon: '🏥', trend: 'All assigned patients' },
-            { label: 'Active Cases', value: activeCount, color: 'green', icon: '✅', trend: 'Currently under care' },
-            { label: 'Needs Attention', value: criticalCount, color: 'red', icon: '⚠️', trend: 'Requires immediate review' },
+            { label: 'Active Roster', value: patients.length, color: 'blue', icon: '🫂', desc: 'Total tracked cases' },
+            { label: 'Heal Progression', value: activeCount, color: 'green', icon: '📈', desc: 'Patients in recovery' },
+            { label: 'Anomalies Detected', value: criticalCount, color: 'red', icon: '⚠️', desc: 'Requiring review' },
           ].map((s, i) => (
-            <div key={i} className={`glass-card stat-card ${s.color} fade-in-${i + 1}`}>
-              <div style={{ fontSize: 22, marginBottom: 8 }}>{s.icon}</div>
-              <div className="stat-label">{s.label}</div>
-              <div className="stat-value">{loading ? '—' : s.value}</div>
-              <div className="stat-trend">{s.trend}</div>
+            <div key={i} className="glass-card premium" style={{ padding: 24, position: 'relative' }}>
+              <div style={{ fontSize: 28, marginBottom: 12 }}>{s.icon}</div>
+              <div style={{ fontSize: 12, fontWeight: 800, color: 'var(--text-muted)', textTransform: 'uppercase', letterSpacing: 1 }}>{s.label}</div>
+              <div style={{ fontSize: 36, fontWeight: 900, marginTop: 4, letterSpacing: -1 }} className={`text-${s.color}`}>{loading ? '...' : s.value}</div>
+              <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginTop: 8 }}>{s.desc}</div>
             </div>
           ))}
         </div>
 
-        {/* ── Patient list ────────────────────────── */}
-        <div className="section-header">
+        {/* ── Patient list  ────────────────────────── */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 24 }}>
           <div>
-            <div className="section-title">🏥 My Patients</div>
-            <div className="section-subtitle">
-              {loading ? 'Loading...' : `${filtered.length} patient${filtered.length !== 1 ? 's' : ''} found`}
-            </div>
+            <h2 style={{ fontSize: 24 }} className="text-gradient-ai">Patient Registry</h2>
+            <p style={{ fontSize: 14, color: 'var(--text-secondary)' }}>
+              {loading ? 'Initializing roster...' : `${filtered.length} patients under clinical observation`}
+            </p>
           </div>
-          <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: 12 }}>
             <div style={{ position: 'relative' }}>
-              <span style={{
-                position: 'absolute', left: 12, top: '50%', transform: 'translateY(-50%)',
-                fontSize: 14, pointerEvents: 'none',
-              }}>🔍</span>
               <input
-                id="patient-search"
+                id="doctor-search"
                 className="form-input"
                 type="text"
-                placeholder="Search name or ID..."
+                placeholder="Search telemetry ID..."
                 value={search}
                 onChange={e => setSearch(e.target.value)}
-                style={{ paddingLeft: 36, width: 220 }}
+                style={{ background: 'rgba(255,255,255,0.03)', borderRadius: 12, paddingLeft: 40, width: 260 }}
               />
+              <span style={{ position: 'absolute', left: 14, top: '50%', transform: 'translateY(-50%)', opacity: 0.5 }}>🔍</span>
             </div>
-            <button className="btn-icon" onClick={fetchPatients} title="Refresh">↻</button>
+            <button className="btn-icon" style={{ borderRadius: 12, width: 42, height: 42 }} onClick={fetchPatients}>↻</button>
           </div>
         </div>
 
-        {error && <div className="alert alert-error"><span>⚠</span> {error}</div>}
+        {error && <div className="alert alert-error">{error}</div>}
 
         {loading ? (
-          <div style={{ display: 'flex', justifyContent: 'center', padding: 80 }}>
-            <div className="spinner" style={{ width: 38, height: 38 }} />
+          <div style={{ padding: 100, textAlign: 'center' }}>
+            <div className="animate-spin" style={{ fontSize: 40, marginBottom: 20 }}>🔄</div>
+            <p>Accessing medical records...</p>
           </div>
         ) : filtered.length === 0 ? (
-          <div className="glass-card">
-            <div className="empty-state">
-              <span className="empty-state-icon">🏥</span>
-              <div className="empty-state-title">No patients found</div>
-              <div className="empty-state-text">
-                {search ? 'Try adjusting your search terms.' : 'No patients have been assigned to you yet.'}
-              </div>
-            </div>
+          <div className="glass-card premium" style={{ padding: 80, textAlign: 'center' }}>
+            <div style={{ fontSize: 48, opacity: 0.5 }}>🗃️</div>
+            <p style={{ marginTop: 20 }}>No matching telemetry found in the active unit database.</p>
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: 16 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: 24 }}>
             {filtered.map((patient, i) => (
               <div
                 key={patient._id}
-                className="glass-card interactive fade-in"
-                style={{ padding: 22, animationDelay: `${i * 40}ms`, cursor: 'default' }}
+                className="glass-card premium interactive"
+                style={{ padding: 28, animationDelay: `${i * 30}ms` }}
               >
-                {/* Card header */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 16 }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-                    {/* Patient avatar */}
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
                     <div style={{
-                      width: 44, height: 44, flexShrink: 0,
-                      background: patient.gender === 'Female'
-                        ? 'linear-gradient(135deg,#a855f7,#f97316)'
-                        : 'linear-gradient(135deg,#4f8ef7,#22d3ee)',
-                      borderRadius: 'var(--radius-md)',
+                      width: 50, height: 50, borderRadius: 14,
+                      background: patient.gender === 'Female' ? 'var(--grad-purple)' : 'var(--grad-blue)',
                       display: 'flex', alignItems: 'center', justifyContent: 'center',
-                      fontSize: 12, fontWeight: 800, color: '#fff',
-                      letterSpacing: '-0.5px',
+                      fontSize: 14, fontWeight: 900, color: '#fff', boxShadow: '0 4px 12px rgba(0,0,0,0.2)'
                     }}>
                       {patient.name?.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
                     </div>
                     <div>
-                      <div style={{ fontWeight: 700, fontSize: 15, color: 'var(--text-primary)', marginBottom: 2 }}>
-                        {patient.name}
-                      </div>
-                      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
-                        {patient.patientId}
-                      </div>
+                      <div style={{ fontWeight: 800, fontSize: 17, color: '#fff' }}>{patient.name}</div>
+                      <div style={{ fontSize: 11, color: 'var(--text-muted)', fontFamily: 'monospace', marginTop: 2 }}>{patient.patientId}</div>
                     </div>
                   </div>
-                  <span className={`badge ${getBadgeClass(patient.woundStatus)}`}>
-                    {patient.woundStatus || 'Active'}
+                  <span className={`badge ${patient.woundStatus === 'Critical' ? 'badge-high' : patient.woundStatus === 'Healthy' ? 'badge-healthy' : 'badge-mild'}`} style={{ borderRadius: 8 }}>
+                    {patient.woundStatus}
                   </span>
                 </div>
 
-                {/* Info grid */}
-                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 18 }}>
-                  {[
-                    { label: 'Age', value: `${patient.age} yrs` },
-                    { label: 'Gender', value: patient.gender },
-                  ].map(item => (
-                    <div key={item.label} className="info-cell">
-                      <div className="info-cell-label">{item.label}</div>
-                      <div className="info-cell-value">{item.value}</div>
-                    </div>
-                  ))}
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 12, marginBottom: 24 }}>
+                  <div style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 4 }}>AGE_VAL</div>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{patient.age} Yrs</div>
+                  </div>
+                  <div style={{ padding: 12, background: 'rgba(255,255,255,0.02)', borderRadius: 10, border: '1px solid var(--border)' }}>
+                    <div style={{ fontSize: 10, fontWeight: 800, color: 'var(--text-muted)', marginBottom: 4 }}>GEN_TYPE</div>
+                    <div style={{ fontSize: 14, fontWeight: 700 }}>{patient.gender}</div>
+                  </div>
                 </div>
 
                 <Link
                   id={`view-patient-${patient._id}`}
                   to={`/patient/${patient._id}`}
-                  className="btn-primary"
-                  style={{ textDecoration: 'none', display: 'flex', justifyContent: 'center', padding: '10px' }}
+                  className="btn-primary shimmer-btn"
+                  style={{ width: '100%', justifyContent: 'center', borderRadius: 12, textDecoration: 'none' }}
                 >
-                  View Scans & Analysis →
+                  Diagnostic Data Board →
                 </Link>
               </div>
             ))}

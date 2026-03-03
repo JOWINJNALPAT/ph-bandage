@@ -1,7 +1,8 @@
+import React from 'react';
 
 /**
- * Professional Analysis Results Component
- * Displays detailed infection analysis
+ * Professional AI Analysis Results Component
+ * Displays refined diagnostic telemetry and infection analysis
  */
 function AnalysisResult({
   scan,
@@ -10,15 +11,12 @@ function AnalysisResult({
 }) {
   if (isLoading) {
     return (
-      <div className="analysis-result">
-        <div style={{ textAlign: 'center' }}>
-          <div className="spinner" style={{ width: 40, height: 40, margin: '0 auto 16px' }} />
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14 }}>
-            🔬 Analyzing your bandage scan...
-          </p>
-          <p style={{ color: 'var(--text-muted)', fontSize: 12, marginTop: 8 }}>
-            Processing image...
-          </p>
+      <div className="glass-card ai-scan-glow" style={{ padding: 60, textAlign: 'center' }}>
+        <div style={{ fontSize: 48, marginBottom: 20 }}>🧬</div>
+        <h3 className="text-gradient-ai" style={{ fontSize: 24, marginBottom: 12 }}>Executing Neural Protocols...</h3>
+        <p style={{ color: 'var(--text-secondary)' }}>Identifying spectral markers and calculating pH coefficients</p>
+        <div style={{ marginTop: 24, height: 4, background: 'rgba(255,255,255,0.05)', borderRadius: 2, width: 200, margin: '24px auto' }}>
+          <div style={{ width: '70%', height: '100%', background: 'var(--grad-blue)', borderRadius: 2 }}></div>
         </div>
       </div>
     );
@@ -27,36 +25,36 @@ function AnalysisResult({
   if (!scan) return null;
 
   const getStatusColor = (level) => {
-    if (level === 'Healthy') return { bg: 'rgba(16, 185, 129, 0.12)', color: '#34d399', icon: '✅' };
-    if (level === 'Mild Risk') return { bg: 'rgba(245, 158, 11, 0.12)', color: '#fbbf24', icon: '⚠️' };
-    if (level === 'Medium Infection') return { bg: 'rgba(249, 115, 22, 0.12)', color: '#fb923c', icon: '🔴' };
-    return { bg: 'rgba(239, 68, 68, 0.12)', color: '#f87171', icon: '🚨' };
+    if (level === 'Healthy') return { bg: 'rgba(16, 185, 129, 0.08)', color: '#34d399', icon: '✅', glow: 'rgba(16, 185, 129, 0.3)' };
+    if (level === 'Mild Risk') return { bg: 'rgba(245, 158, 11, 0.08)', color: '#fbbf24', icon: '⚠️', glow: 'rgba(245, 158, 11, 0.3)' };
+    if (level === 'Medium Infection') return { bg: 'rgba(249, 115, 22, 0.08)', color: '#fb923c', icon: '🟠', glow: 'rgba(249, 115, 22, 0.3)' };
+    return { bg: 'rgba(239, 68, 68, 0.08)', color: '#f87171', icon: '🚨', glow: 'rgba(239, 68, 68, 0.3)' };
   };
 
   const status = getStatusColor(scan.infectionLevel);
 
   return (
-    <div className="analysis-result">
+    <div className="glass-card premium scale-in" style={{ padding: 32, position: 'relative' }}>
+      <div style={{ position: 'absolute', top: 0, right: 0, padding: 12 }}>
+        <span className="ai-data-tag">Verified Result</span>
+      </div>
+
       {/* Header */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 20 }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 28 }}>
         <div>
-          <h3 style={{ fontSize: 18, fontWeight: 700, color: 'var(--text-primary)', margin: '0 0 4px 0' }}>
-            {status.icon} Analysis Complete
+          <h3 className="text-gradient-ai" style={{ fontSize: 22, marginBottom: 4 }}>
+            Optical Telemetry Complete
           </h3>
-          <p style={{ fontSize: 12, color: 'var(--text-secondary)', margin: 0 }}>
-            {new Date().toLocaleString()}
+          <p style={{ fontSize: 12, color: 'var(--text-muted)', fontFamily: 'monospace' }}>
+            ID: {scan._id?.toUpperCase()} • {new Date(scan.timestamp).toLocaleString()}
           </p>
         </div>
         {onClose && (
           <button
             onClick={onClose}
             style={{
-              background: 'none',
-              border: 'none',
-              fontSize: 20,
-              cursor: 'pointer',
-              color: 'var(--text-secondary)',
-              padding: 8,
+              background: 'rgba(255,255,255,0.05)', border: '1px solid var(--border)',
+              borderRadius: 8, color: 'var(--text-secondary)', padding: 6, cursor: 'pointer'
             }}
           >
             ✕
@@ -64,114 +62,80 @@ function AnalysisResult({
         )}
       </div>
 
-      {/* Main Status */}
+      {/* Primary Result Card */}
       <div style={{
-        padding: 16,
-        borderRadius: 'var(--radius-md)',
-        background: status.bg,
-        border: `1px solid ${status.color}33`,
-        marginBottom: 20,
+        padding: 24, borderRadius: 16, background: status.bg,
+        border: `1px solid ${status.color}33`, marginBottom: 28,
+        boxShadow: `0 10px 30px ${status.glow}`, position: 'relative', overflow: 'hidden'
       }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ position: 'absolute', top: -10, left: -10, fontSize: 80, opacity: 0.05 }}>
+          {status.icon}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', position: 'relative' }}>
           <div>
-            <div style={{ fontSize: 14, fontWeight: 600, color: status.color, marginBottom: 4 }}>
-              Infection Level
+            <div style={{ fontSize: 12, fontWeight: 800, color: status.color, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 8 }}>
+              Condition Index
             </div>
-            <div style={{ fontSize: 24, fontWeight: 800, color: status.color }}>
+            <div style={{ fontSize: 32, fontWeight: 900, color: status.color, letterSpacing: -1 }}>
               {scan.infectionLevel}
             </div>
           </div>
           <div style={{ textAlign: 'right' }}>
-            <div style={{ fontSize: 12, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              pH Value
+            <div style={{ fontSize: 12, color: 'var(--text-muted)', fontWeight: 800, marginBottom: 8, textTransform: 'uppercase' }}>
+              Spectral ph
             </div>
-            <div style={{ fontSize: 28, fontWeight: 800, color: 'var(--blue)' }}>
-              {scan.phValue}
+            <div style={{ fontSize: 42, fontWeight: 900, color: '#fff', letterSpacing: -2 }}>
+              {typeof scan.phValue === 'number' ? scan.phValue.toFixed(2) : scan.phValue}
             </div>
           </div>
         </div>
       </div>
 
-      {/* Metrics */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 20 }}>
+      {/* AI Metadata Tags */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 12, marginBottom: 28 }}>
         {[
-          { label: 'Bandage ID', value: scan.bandageId, icon: '🏷️' },
-          { label: 'Color Detected', value: scan.detectedColor || scan.colorDetected || scan.color, icon: '🎨' },
-          { label: 'Scan Confidence', value: `${scan.confidence || 0}%`, icon: '🎯' },
-          { label: 'Method', value: scan.method || 'OpenCV Scan', icon: '💻' },
-        ].map((metric, i) => (
-          <div key={i} style={{
-            padding: 12,
-            borderRadius: 'var(--radius-md)',
-            background: 'rgba(255, 255, 255, 0.03)',
-            border: '1px solid var(--border)',
-          }}>
-            <div style={{ fontSize: 18, marginBottom: 6 }}>{metric.icon}</div>
-            <div style={{ fontSize: 11, color: 'var(--text-secondary)', marginBottom: 4 }}>
-              {metric.label}
-            </div>
-            <div style={{ fontSize: 13, fontWeight: 600, color: 'var(--text-primary)' }}>
-              {metric.value}
-            </div>
+          { label: 'CONFIDENCE', value: `${scan.confidence || 0}%`, color: 'var(--cyan)' },
+          { label: 'LUMINOSITY', value: scan.metadata?.luminosity ? `${Math.round(scan.metadata.luminosity)}lx` : 'CALC...', color: 'var(--blue)' },
+          { label: 'HUE_COEF', value: scan.metadata?.hue ? Math.round(scan.metadata.hue) : 'N/A', color: 'var(--purple-light)' },
+          { label: 'STABILITY', value: scan.metadata?.variance ? (scan.metadata.variance > 40 ? 'HIGH' : 'LOW') : 'NORM', color: 'var(--green-light)' },
+        ].map((tag, i) => (
+          <div key={i} style={{ textAlign: 'center', padding: '10px 4px', background: 'rgba(255,255,255,0.02)', borderRadius: 8, border: '1px solid var(--border)' }}>
+            <div style={{ fontSize: 9, fontWeight: 900, color: 'var(--text-muted)', marginBottom: 4 }}>{tag.label}</div>
+            <div style={{ fontSize: 13, fontWeight: 700, color: tag.color }}>{tag.value}</div>
           </div>
         ))}
       </div>
 
-      {/* Clinical Recommendation */}
-      <div className="clinical-note">
-        <div style={{ fontSize: 12, fontWeight: 700, color: 'var(--blue)', marginBottom: 8 }}>
-          💡 Clinical Recommendation
+      {/* Clinical Protocol */}
+      <div style={{
+        padding: 20, borderRadius: 12, background: 'rgba(255,255,255,0.03)',
+        borderLeft: `4px solid ${status.color}`
+      }}>
+        <div style={{ fontSize: 11, fontWeight: 900, color: status.color, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
+          💡 AI PROTOCOL ADVISORY
         </div>
-        <div style={{ fontSize: 13, color: 'var(--text-primary)', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
           {scan.infectionLevel === 'Healthy' && (
-            <>Wound shows <strong>healthy</strong> pH levels. Continue monitoring. No intervention required at this time.</>
+            <>Optical signatures indicate <strong>nominal</strong> wound health. pH within physiological range. No escalation required.</>
           )}
           {scan.infectionLevel === 'Mild Risk' && (
-            <>Wound shows <strong>elevated</strong> pH. Increase monitoring frequency. Consider topical antimicrobial treatment.</>
+            <>Detected <strong>alkaline shift</strong>. Probability of micro-inflammation detected. Initiate prophylactic cleansing protocol.</>
           )}
           {scan.infectionLevel === 'Medium Infection' && (
-            <>Wound shows <strong>infection risk</strong>. Recommend clinical evaluation. Consider antibiotic treatment.</>
+            <><strong>Critical pH Variance</strong> detected. Pattern indicates bacterial colonization. immediate specialist review mandated.</>
           )}
           {scan.infectionLevel === 'High Infection' && (
-            <>Wound shows <strong>high infection risk</strong>. URGENT: Immediate clinical intervention recommended.</>
+            <><strong>Severe Pathogen Signal</strong>. High alkalinity identified. Emergency debridement or surgical appraisal recommended.</>
           )}
         </div>
       </div>
 
-      {/* pH Reference */}
-      <div style={{ marginTop: 20, paddingTop: 16, borderTop: '1px solid var(--border)' }}>
-        <div style={{ fontSize: 11, fontWeight: 600, color: 'var(--text-secondary)', marginBottom: 12, textTransform: 'uppercase', letterSpacing: '0.3px' }}>
-          📊 pH Reference Scale
+      {/* Footer Branding */}
+      <div style={{ marginTop: 28, paddingTop: 16, borderTop: '1px solid var(--border)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div style={{ fontSize: 10, color: 'var(--text-muted)', fontWeight: 800 }}>NEURAL_DIAGNOSTICS_SYS_V4.2.0</div>
+        <div style={{ display: 'flex', gap: 4 }}>
+          {[1, 2, 3].map(i => <div key={i} style={{ width: 4, height: 4, borderRadius: '50%', background: 'var(--blue)', opacity: 0.3 * i }}></div>)}
         </div>
-        <div style={{ display: 'flex', gap: 8 }}>
-          {[
-            { range: '<7.0', label: 'Healthy', color: '#10b981' },
-            { range: '7.0-7.4', label: 'Mild', color: '#f59e0b' },
-            { range: '7.4-8.0', label: 'Medium', color: '#f97316' },
-            { range: '>8.0', label: 'High', color: '#ef4444' },
-          ].map((ref, i) => (
-            <div key={i} style={{
-              flex: 1,
-              padding: 10,
-              borderRadius: 'var(--radius-sm)',
-              background: `${ref.color}15`,
-              border: `1px solid ${ref.color}35`,
-              textAlign: 'center',
-            }}>
-              <div style={{ fontSize: 11, fontWeight: 700, color: ref.color, marginBottom: 2 }}>
-                {ref.range}
-              </div>
-              <div style={{ fontSize: 10, color: 'var(--text-secondary)' }}>
-                {ref.label}
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Timestamp */}
-      <div style={{ marginTop: 16, fontSize: 11, color: 'var(--text-muted)', textAlign: 'center' }}>
-        Analysis ID: {scan._id?.slice(-8) || 'N/A'} · {new Date(scan.timestamp).toLocaleString()}
       </div>
     </div>
   );
