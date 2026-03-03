@@ -28,224 +28,229 @@ function LoginPage() {
       login(response.data.token, response.data.user);
       navigate(`/${response.data.user.role}-dashboard`);
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid credentials. Please try again.');
+      setError(err.response?.data?.message || 'Login failed. Check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="auth-bg">
-
-      {/* ── Left Panel ─────────────────────────────── */}
-      <div className="auth-panel-left">
-        {/* Animated background orbs */}
+    <div style={{
+      minHeight: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      alignItems: 'center',
+      padding: '80px 24px',
+      position: 'relative'
+    }}>
+      {/* ── Top Navigation / Badge ────────────────── */}
+      <div style={{
+        position: 'fixed', top: 32, left: '50%', transform: 'translateX(-50%)',
+        display: 'flex', alignItems: 'center', gap: 16, zIndex: 100
+      }}>
         <div style={{
-          position: 'absolute', inset: 0, overflow: 'hidden', pointerEvents: 'none',
+          padding: '6px 16px',
+          background: 'rgba(15, 23, 42, 0.6)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(255, 255, 255, 0.1)',
+          borderRadius: '100px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: 10,
+          fontSize: 12,
+          fontWeight: 600,
+          color: '#fff',
+          boxShadow: '0 4px 20px rgba(0,0,0,0.2)'
         }}>
-          {[
-            { size: 240, color: 'rgba(79,142,247,0.1)', top: '10%', left: '20%', dur: '8s' },
-            { size: 180, color: 'rgba(168,85,247,0.08)', top: '55%', left: '60%', dur: '11s' },
-            { size: 130, color: 'rgba(34,211,238,0.07)', top: '75%', left: '15%', dur: '9s' },
-          ].map((orb, i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              width: orb.size, height: orb.size,
-              background: `radial-gradient(circle, ${orb.color} 0%, transparent 70%)`,
-              top: orb.top, left: orb.left,
-              borderRadius: '50%',
-              animation: `float ${orb.dur} ease-in-out infinite`,
-              animationDelay: `${i * 1.5}s`,
-            }} />
-          ))}
+          <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#10b981', boxShadow: '0 0 10px #10b981', animation: 'pulse 2s infinite' }} />
+          Live Neural System — v4.2.0 Active
+        </div>
+      </div>
+
+      {/* ── Hero Content ──────────────────────────── */}
+      <div style={{
+        textAlign: 'center',
+        maxWidth: 800,
+        marginTop: 60,
+        marginBottom: 60,
+        animation: 'fadeInUp 0.8s ease-out'
+      }}>
+        <div style={{ display: 'flex', justifyContent: 'center', marginBottom: 32 }}>
+          <Logo size={64} />
+        </div>
+        <h1 style={{
+          fontSize: 'clamp(42px, 8vw, 72px)',
+          fontWeight: 900,
+          color: '#fff',
+          lineHeight: 1.1,
+          letterSpacing: '-2px',
+          marginBottom: 24
+        }}>
+          Smart Healing,<br />
+          <span style={{
+            background: 'linear-gradient(to right, #0ea5e9, #6366f1)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            display: 'inline-block'
+          }}>
+            Accelerated.
+          </span>
+        </h1>
+        <p style={{
+          fontSize: 'clamp(16px, 2vw, 18px)',
+          color: '#94a3b8',
+          lineHeight: 1.6,
+          maxWidth: 500,
+          margin: '0 auto'
+        }}>
+          Proactive wound care empowered by real-time pH analysis
+          and surgical-grade AI diagnostics.
+        </p>
+      </div>
+
+      {/* ── Login Card ────────────────────────────── */}
+      <div className="glass-card premium" style={{
+        width: '100%',
+        maxWidth: 420,
+        background: 'rgba(15, 23, 42, 0.6)',
+        backdropFilter: 'blur(16px)',
+        border: '1px solid rgba(255, 255, 255, 0.1)',
+        padding: 40,
+        borderRadius: 24,
+        boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)',
+        animation: 'fadeInUp 1s ease-out'
+      }}>
+        <div style={{ marginBottom: 32 }}>
+          <div style={{ fontSize: 11, fontWeight: 800, color: '#0ea5e9', letterSpacing: 1.5, textTransform: 'uppercase', marginBottom: 8 }}>
+            — Staff Portal
+          </div>
+          <h2 style={{ fontSize: 24, fontWeight: 800, color: '#fff' }}>Clinical Authentication</h2>
         </div>
 
-        {/* Content */}
-        <div style={{ position: 'relative', zIndex: 1, maxWidth: 400 }}>
-          {/* Logo */}
-          <div style={{ marginBottom: 40, display: 'flex', alignItems: 'center', gap: 14 }}>
-            <Logo size={52} />
-            <div>
-              <div style={{ fontWeight: 900, fontSize: 22, color: 'var(--text-primary)', letterSpacing: '-0.5px' }}>
-                pH Bandage
-              </div>
-              <div style={{ fontSize: 12, color: 'var(--text-secondary)', fontWeight: 500 }}>
-                Smart Wound Care System
-              </div>
-            </div>
-          </div>
-
-          {/* Headline */}
-          <h1 style={{
-            fontSize: 34, fontWeight: 900,
-            color: 'var(--text-primary)',
-            lineHeight: 1.25,
-            letterSpacing: '-0.8px',
-            marginBottom: 14,
+        {error && (
+          <div style={{
+            background: 'rgba(239, 68, 68, 0.1)',
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+            padding: '12px 16px',
+            borderRadius: 12,
+            color: '#f87171',
+            fontSize: 13,
+            marginBottom: 24,
+            display: 'flex',
+            alignItems: 'center',
+            gap: 10
           }}>
-            Advanced wound<br />
-            <span style={{
-              background: 'var(--grad-blue)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-            }}>
-              infection detection
-            </span>
-          </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: 14, lineHeight: 1.7, marginBottom: 40 }}>
-            Advanced pH analysis for proactive wound care,
-            empowering clinical staff with real-time infection insights.
-          </p>
+            <span>⚠️</span> {error}
+          </div>
+        )}
 
-          {/* Feature list */}
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
-            {FEATURES.map((f, i) => (
-              <div key={i} className="fade-in" style={{
-                animationDelay: `${i * 0.12}s`,
-                display: 'flex', alignItems: 'flex-start', gap: 14,
-                padding: '14px 16px',
+        <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+          <div>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase' }}>Email Address</label>
+            <input
+              type="email"
+              value={email}
+              onChange={e => setEmail(e.target.value)}
+              required
+              placeholder="name@hospital.com"
+              style={{
+                width: '100%',
+                padding: '14px 18px',
                 background: 'rgba(255,255,255,0.03)',
-                border: '1px solid var(--border)',
-                borderRadius: 'var(--radius-md)',
-              }}>
-                <div style={{
-                  fontSize: 20, width: 36, height: 36,
-                  background: 'rgba(79,142,247,0.1)',
-                  border: '1px solid rgba(79,142,247,0.15)',
-                  borderRadius: 'var(--radius-sm)',
-                  display: 'flex', alignItems: 'center', justifyContent: 'center',
-                  flexShrink: 0,
-                }}>
-                  {f.icon}
-                </div>
-                <div>
-                  <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--text-primary)', marginBottom: 2 }}>{f.title}</div>
-                  <div style={{ fontSize: 12, color: 'var(--text-secondary)', lineHeight: 1.5 }}>{f.desc}</div>
-                </div>
-              </div>
-            ))}
+                border: '1px solid rgba(255,255,255,0.1)',
+                borderRadius: 12,
+                color: '#fff',
+                fontSize: 14,
+                outline: 'none',
+                transition: 'border-color 0.2s'
+              }}
+            />
           </div>
 
-          {/* Bottom tag */}
-          <div style={{
-            marginTop: 36,
-            display: 'inline-flex', alignItems: 'center', gap: 8,
-            padding: '6px 14px',
-            background: 'rgba(16,185,129,0.08)',
-            border: '1px solid rgba(16,185,129,0.18)',
-            borderRadius: 'var(--radius-full)',
-            fontSize: 11.5, color: 'var(--green)', fontWeight: 600,
-          }}>
-            <div style={{ width: 6, height: 6, borderRadius: '50%', background: 'var(--green)', animation: 'pulse-glow 2s infinite' }} />
-            System Operational — All services running
-          </div>
-        </div>
-      </div>
-
-      {/* ── Right Panel ────────────────────────────── */}
-      <div className="auth-panel-right">
-        <div className="auth-card fade-in">
-
-          {/* Portal badge */}
-          <div style={{
-            display: 'flex', alignItems: 'center', gap: 10, marginBottom: 28,
-          }}>
-            <div style={{
-              padding: '4px 12px',
-              background: 'rgba(79,142,247,0.1)',
-              border: '1px solid rgba(79,142,247,0.2)',
-              borderRadius: 'var(--radius-full)',
-              fontSize: 11, color: 'var(--blue)', fontWeight: 700,
-              letterSpacing: '0.4px', textTransform: 'uppercase',
-            }}>
-              🏥 Hospital Staff Portal
-            </div>
-          </div>
-
-          <div className="auth-card-inner">
-            {/* Heading */}
-            <div style={{ marginBottom: 28 }}>
-              <h2 style={{ fontSize: 22, fontWeight: 800, letterSpacing: '-0.4px', marginBottom: 4 }}>
-                Welcome back
-              </h2>
-              <p style={{ fontSize: 13.5, color: 'var(--text-secondary)' }}>
-                Sign in to your clinical account
-              </p>
-            </div>
-
-            {/* Error */}
-            {error && (
-              <div className="alert alert-error">
-                <span style={{ fontSize: 16 }}>⚠</span> {error}
-              </div>
-            )}
-
-            {/* Form */}
-            <form onSubmit={handleSubmit}>
-              {/* Email */}
-              <div className="form-group">
-                <label className="form-label">Email Address</label>
-                <input
-                  id="login-email"
-                  type="email"
-                  className="form-input"
-                  value={email}
-                  onChange={e => setEmail(e.target.value)}
-                  required
-                  placeholder="your@hospital.com"
-                  autoComplete="email"
-                />
-              </div>
-
-              {/* Password */}
-              <div className="form-group" style={{ marginBottom: 24 }}>
-                <label className="form-label">Password</label>
-                <div className="input-wrapper">
-                  <input
-                    id="login-password"
-                    type={showPassword ? 'text' : 'password'}
-                    className="form-input"
-                    value={password}
-                    onChange={e => setPassword(e.target.value)}
-                    required
-                    placeholder="••••••••"
-                    autoComplete="current-password"
-                  />
-                  <button
-                    type="button"
-                    className="input-action"
-                    onClick={() => setShowPassword(p => !p)}
-                    tabIndex={-1}
-                  >
-                    {showPassword ? '🙈' : '👁️'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Submit */}
+          <div style={{ marginBottom: 8 }}>
+            <label style={{ display: 'block', fontSize: 12, fontWeight: 700, color: '#94a3b8', marginBottom: 8, textTransform: 'uppercase' }}>Password</label>
+            <div style={{ position: 'relative' }}>
+              <input
+                type={showPassword ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                required
+                placeholder="••••••••"
+                style={{
+                  width: '100%',
+                  padding: '14px 18px',
+                  background: 'rgba(255,255,255,0.03)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: 12,
+                  color: '#fff',
+                  fontSize: 14,
+                  outline: 'none'
+                }}
+              />
               <button
-                id="login-submit"
-                type="submit"
-                className="btn-primary pulse-glow"
-                disabled={loading}
-                style={{ width: '100%', justifyContent: 'center', padding: '12px 20px', fontSize: 14 }}
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                style={{ position: 'absolute', right: 14, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: '#64748b', cursor: 'pointer' }}
               >
-                {loading
-                  ? <><span className="spinner" style={{ width: 16, height: 16 }} /> Signing in...</>
-                  : <>Sign In <span style={{ opacity: 0.8 }}>→</span></>
-                }
+                {showPassword ? '🙈' : '👁️'}
               </button>
-            </form>
-
-            {/* Divider + footer */}
-            <div className="divider" style={{ marginTop: 24, marginBottom: 16 }} />
-            <p style={{ fontSize: 11.5, color: 'var(--text-muted)', textAlign: 'center', lineHeight: 1.6 }}>
-              Secure access for authorised clinical staff only.<br />
-              Contact your administrator for account issues.
-            </p>
+            </div>
           </div>
+
+          <button
+            type="submit"
+            disabled={loading}
+            className="shimmer-btn"
+            style={{
+              width: '100%',
+              padding: '16px',
+              background: 'linear-gradient(to right, #0ea5e9, #2563eb)',
+              border: 'none',
+              borderRadius: 12,
+              color: '#fff',
+              fontSize: 14,
+              fontWeight: 800,
+              textTransform: 'uppercase',
+              letterSpacing: 1,
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: 12,
+              boxShadow: '0 10px 20px -10px rgba(14, 165, 233, 0.5)',
+              transition: 'transform 0.2s'
+            }}
+          >
+            {loading ? 'Authenticating...' : <>Access Portal <span style={{ opacity: 0.6 }}>→</span></>}
+          </button>
+        </form>
+
+        <div style={{
+          marginTop: 32,
+          paddingTop: 24,
+          borderTop: '1px solid rgba(255,255,255,0.05)',
+          textAlign: 'center'
+        }}>
+          <p style={{ fontSize: 11, color: '#64748b', lineHeight: 1.6 }}>
+            Authorized Personnel Only. All session data is hardware-encrypted and logged for HIPAA audit compliance.
+          </p>
         </div>
       </div>
+
+      <style>{`
+        @keyframes fadeInUp {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        @keyframes pulse {
+          0%, 100% { opacity: 1; transform: scale(1); }
+          50% { opacity: 0.5; transform: scale(0.9); }
+        }
+        input:focus {
+          border-color: #0ea5e9 !important;
+          box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+      `}</style>
     </div>
   );
 }
