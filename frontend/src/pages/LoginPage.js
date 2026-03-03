@@ -4,11 +4,7 @@ import { authAPI } from '../utils/api';
 import { useAuth } from '../hooks/useAuth';
 import Logo from '../components/Logo';
 
-const FEATURES = [
-  { icon: '🩺', title: 'Real-time pH Monitoring', desc: 'Detect wound infection levels instantly via smart bandage color analysis.' },
-  { icon: '📊', title: 'Clinical Analytics', desc: 'Trend charts and historical pH data for evidence-based wound care decisions.' },
-  { icon: '🔒', title: 'HIPAA-Compliant Security', desc: 'Role-based access for nurses, doctors, and administrators.' },
-];
+
 
 function LoginPage() {
   const [email, setEmail] = useState('');

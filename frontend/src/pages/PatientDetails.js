@@ -3,7 +3,7 @@ import { useParams, useNavigate } from 'react-router-dom';
 import { patientAPI, scanAPI } from '../utils/api';
 import { formatDate, timeAgo } from '../utils/helpers';
 import {
-  LineChart, Line, XAxis, YAxis, CartesianGrid,
+  XAxis, YAxis, CartesianGrid,
   Tooltip, ResponsiveContainer, ReferenceLine, Area, AreaChart,
 } from 'recharts';
 

@@ -12,7 +12,6 @@ const CameraScanner = ({ onScanComplete, onCancel }) => {
     const [isSyncing, setIsSyncing] = useState(false);
     const [syncProgress, setSyncProgress] = useState(0);
     const [status, setStatus] = useState('Initializing AI module...');
-    const [error, setError] = useState(null);
     const [liveData, setLiveData] = useState({ hue: 0, variance: 0, light: 0 });
     const syncInterval = useRef(null);
 
@@ -53,7 +52,7 @@ const CameraScanner = ({ onScanComplete, onCancel }) => {
                     setStatus('Align bandage — Touch and Hold to Sync');
                 }
             } catch (err) {
-                setError('Neural vision requires camera access. Please enable permissions.');
+                setStatus('Neural vision requires camera access. Please enable permissions.');
                 console.error(err);
             }
         }
@@ -64,7 +63,7 @@ const CameraScanner = ({ onScanComplete, onCancel }) => {
                 stream.getTracks().forEach(track => track.stop());
             }
         };
-    }, []);
+    }, [stream]);
 
     // Process frame with OpenCV
     const processFrame = useCallback(() => {
