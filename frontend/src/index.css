@@ -1641,3 +1641,28 @@ button:focus {
   text-transform: uppercase;
   letter-spacing: 1px;
 }
+
+/* ── Neural Interactivity ────────────────────────── */
+.tactile-pulse {
+  animation: tactile-pulse 2s infinite ease-out;
+}
+
+@keyframes tactile-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(79, 142, 247, 0.4);
+  }
+
+  70% {
+    box-shadow: 0 0 0 30px rgba(79, 142, 247, 0);
+  }
+
+  100% {
+    box-shadow: 0 0 0 0 rgba(79, 142, 247, 0);
+  }
+}
+
+.neural-ring {
+  stroke-dasharray: 848;
+  stroke-dashoffset: 848;
+  transition: stroke-dashoffset 0.1s linear;
+}

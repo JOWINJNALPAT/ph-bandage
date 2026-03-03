@@ -109,12 +109,12 @@ function AnalysisResult({
       {/* Clinical Protocol */}
       <div style={{
         padding: 20, borderRadius: 12, background: 'rgba(255,255,255,0.03)',
-        borderLeft: `4px solid ${status.color}`
+        borderLeft: `4px solid ${status.color}`, marginBottom: 28
       }}>
         <div style={{ fontSize: 11, fontWeight: 900, color: status.color, marginBottom: 10, textTransform: 'uppercase', letterSpacing: 1 }}>
           💡 AI PROTOCOL ADVISORY
         </div>
-        <div style={{ fontSize: 14, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
+        <div style={{ fontSize: 13, color: 'var(--text-secondary)', lineHeight: 1.6 }}>
           {scan.infectionLevel === 'Healthy' && (
             <>Optical signatures indicate <strong>nominal</strong> wound health. pH within physiological range. No escalation required.</>
           )}
@@ -128,6 +128,17 @@ function AnalysisResult({
             <><strong>Severe Pathogen Signal</strong>. High alkalinity identified. Emergency debridement or surgical appraisal recommended.</>
           )}
         </div>
+      </div>
+
+      {/* User Verification Action */}
+      <div style={{ textAlign: 'center' }}>
+        <button
+          onClick={onClose}
+          className="btn-primary shimmer-btn"
+          style={{ width: '100%', padding: '14px', borderRadius: 12, textTransform: 'uppercase', fontWeight: 800, fontSize: 12, letterSpacing: 1 }}
+        >
+          I have reviewed and verified this result →
+        </button>
       </div>
 
       {/* Footer Branding */}
