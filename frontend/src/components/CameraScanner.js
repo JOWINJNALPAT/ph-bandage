@@ -85,9 +85,10 @@ const CameraScanner = ({ onScanComplete, onCancel }) => {
 
             let src = cv.imread(canvas);
 
-            const size = 260;
-            const x = Math.max(0, (video.videoWidth - size) / 2);
-            const y = Math.max(0, (video.videoHeight - size) / 2);
+            const size = Math.floor(Math.min(260, video.videoWidth, video.videoHeight));
+            const x = Math.floor(Math.max(0, (video.videoWidth - size) / 2));
+            const y = Math.floor(Math.max(0, (video.videoHeight - size) / 2));
+            
             let rect = new cv.Rect(x, y, size, size);
             let roi = src.roi(rect);
 

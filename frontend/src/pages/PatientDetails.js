@@ -372,7 +372,7 @@ function PatientDetails() {
                     <span className={`badge ${cls}`}>{scan.infectionLevel}</span>
                     {scan.imageUrl && (
                       <img
-                        src={`http://localhost:5000${scan.imageUrl}`}
+                        src={`${process.env.REACT_APP_API_URL?.replace('/api', '') || ''}${scan.imageUrl}`}
                         alt="Scan"
                         style={{
                           width: 52, height: 52,
