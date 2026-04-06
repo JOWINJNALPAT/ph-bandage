@@ -67,19 +67,27 @@ const CameraScanner = ({ onScanComplete, onCancel }) => {
 
     // Process frame with OpenCV
     const processFrame = useCallback(() => {
-        if (!cvReady || !videoRef.current || !canvasRef.current) return;
+        if (!cvReady || !videoRef.current || !canvasRef.current) return null;
 
         const cv = window.cv;
         const video = videoRef.current;
+        const canvas = canvasRef.current;
+
+        if (video.videoWidth === 0 || video.videoHeight === 0) return null;
 
         try {
-            let src = new cv.Mat(video.videoHeight, video.videoWidth, cv.CV_8UC4);
-            let cap = new cv.VideoCapture(video);
-            cap.read(src);
+            if (canvas.width !== video.videoWidth) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+            }
+            const ctx = canvas.getContext('2d', { willReadFrequently: true });
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+            let src = cv.imread(canvas);
 
             const size = 260;
-            const x = (video.videoWidth - size) / 2;
-            const y = (video.videoHeight - size) / 2;
+            const x = Math.max(0, (video.videoWidth - size) / 2);
+            const y = Math.max(0, (video.videoHeight - size) / 2);
             let rect = new cv.Rect(x, y, size, size);
             let roi = src.roi(rect);
 
@@ -120,28 +128,32 @@ const CameraScanner = ({ onScanComplete, onCancel }) => {
     // Live Telemetry Loop
     useEffect(() => {
         let frameId;
-        const tick = () => {
-            if (cvReady && videoRef.current && !isSyncing) {
-                const result = processFrame();
-                if (result) {
-                    setLiveData({
-                        hue: Math.round(result.hue),
-                        variance: Math.round(result.variance),
-                        light: Math.round(result.light)
-                    });
+        let lastTime = 0;
+        const tick = (time) => {
+            if (time - lastTime > 200) { // Throttle to roughly 5 FPS
+                lastTime = time;
+                if (cvReady && videoRef.current && !isSyncing) {
+                    const result = processFrame();
+                    if (result) {
+                        setLiveData({
+                            hue: Math.round(result.hue),
+                            variance: Math.round(result.variance),
+                            light: Math.round(result.light)
+                        });
 
-                    if (result.variance < 15) {
-                        setStatus('⚠️ UNSTABLE - HOLD STEADY');
-                    } else if (result.light < 40) {
-                        setStatus('⚠️ LOW LIGHT - INCREASE AMBIENT ILLUM');
-                    } else {
-                        setStatus('READY - HOLD TO SYNC');
+                        if (result.variance < 15) {
+                            setStatus('⚠️ UNSTABLE - HOLD STEADY');
+                        } else if (result.light < 40) {
+                            setStatus('⚠️ LOW LIGHT - INCREASE AMBIENT ILLUM');
+                        } else {
+                            setStatus('READY - HOLD TO SYNC');
+                        }
                     }
                 }
             }
             frameId = requestAnimationFrame(tick);
         };
-        tick();
+        frameId = requestAnimationFrame(tick);
         return () => cancelAnimationFrame(frameId);
     }, [cvReady, isSyncing, processFrame]);
 
